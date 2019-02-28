@@ -26,15 +26,12 @@ namespace Hydrology.DBManager
         {
             //将XML文件加载进来
             Dictionary<string, string> result = new Dictionary<string, string>();
-            XDocument document = XDocument.Load("config\\123.xml");
+            XDocument document = XDocument.Load("config\\datainterface.xml");
             //获取到XML的根元素进行操作
             XElement root = document.Root;
-            XElement ele = root.Element("data");
+            XElement ip = root.Element("ip");
             //获取name标签的值
-            XElement ip = ele.Element("ip");
-            XElement port = ele.Element("port");
-            urlDic["ip"] = ip.ToString();
-            urlDic["port"] = port.ToString();
+            urlDic["ip"] = ip.Value.ToString();
             return result;
             //Console.WriteLine(shuxing.Value);
             //获取根元素下的所有子元素

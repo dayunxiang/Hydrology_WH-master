@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLSubCenter : CSQLBase, ISubCenterProxy
     {
         #region STATIC_MEMBER
+        private string urlPrefix = "127.0.0.1:8088";
         private const string CT_EntityName = "CEntitySubCenter";   //  数据库表SubCenter实体类
         private static readonly string CT_TableName = "SubCenter"; //数据库分中心表的名字
         private static readonly string CN_SubCenterID = "SubCenterID"; //分中心记录的唯一ID
@@ -42,6 +43,11 @@ namespace Hydrology.DBManager.DB.SQLServer
 
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_SubCenter;
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         // 添加新列
@@ -79,19 +85,23 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public bool AddRange(List<CEntitySubCenter> items)
         {
+            if (items.Count <= 0)
+            {
+                return true;
+            }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "subcenter/insertSubcenter";
-            string url = "http://127.0.0.1:8088/subcenter/insertSubcenter";
+            string suffix = "/subcenter/insertSubcenter";
+            string url = "http://" + urlPrefix + suffix;
             string jsonStr = HttpHelper.ObjectToJson(items);
             param["subcenter"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
-                return true;
             }
             catch (Exception e)
             {
                 Debug.WriteLine("新增分中心失败");
+                return false;
             }
             return true;
             //foreach (var item in items)
@@ -128,22 +138,39 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            // 除主键外和站点外，其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            foreach (var item in items)
-            {
-                String strID = item.SubCenterID.ToString();
-                String strName = item.SubCenterName == null ? "null" : item.SubCenterName;
-                String strComment = item.Comment == null ? "null" : item.Comment;
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string suffix = "/subcenter/updateSubcenter";
+            string url = "http://" + urlPrefix + suffix;
+            string jsonStr = HttpHelper.ObjectToJson(items);
 
-                sql.AppendFormat("UPDATE {0} SET [{1}]='{2}',[{3}]='{4}' WHERE [{5}]={6};",
-                    CT_TableName,
-                    CN_SubCenterName, strName,
-                    CN_Comment, strComment,
-                    CN_SubCenterID, strID);
+            param["subcenter"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
             }
-            // 更新数据库
-            return base.ExecuteSQLCommand(sql.ToString());
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新分中心失败");
+                return false;
+            }
+            return true;
+
+            //// 除主键外和站点外，其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            //foreach (var item in items)
+            //{
+            //    String strID = item.SubCenterID.ToString();
+            //    String strName = item.SubCenterName == null ? "null" : item.SubCenterName;
+            //    String strComment = item.Comment == null ? "null" : item.Comment;
+
+            //    sql.AppendFormat("UPDATE {0} SET [{1}]='{2}',[{3}]='{4}' WHERE [{5}]={6};",
+            //        CT_TableName,
+            //        CN_SubCenterName, strName,
+            //        CN_Comment, strComment,
+            //        CN_SubCenterID, strID);
+            //}
+            //// 更新数据库
+            //return base.ExecuteSQLCommand(sql.ToString());
         }
 
         /// <summary>
@@ -157,14 +184,42 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            StringBuilder sql = new StringBuilder();
-            foreach (var item in items)
+            List<CEntitySubCenter> subcenterList = new List<CEntitySubCenter>();
+            for(int i = 0; i < items.Count; i++)
             {
-                sql.AppendFormat("DELETE FROM {0} WHERE [{1}]={2};",
-                CT_TableName,
-                CN_SubCenterID, item);
+                subcenterList.Add(new CEntitySubCenter()
+                {
+                    SubCenterID = items[i]
+                });
             }
-            return base.ExecuteSQLCommand(sql.ToString());
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string suffix = "/subcenter/deleteSubcenter";
+            string url = "http://" + urlPrefix + suffix;
+            string jsonStr = HttpHelper.ObjectToJson(subcenterList);
+            param["subcenter"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除分中心失败");
+                return false;
+            }
+            return true;
+
+            //if (items.Count <= 0)
+            //{
+            //    return true;
+            //}
+            //StringBuilder sql = new StringBuilder();
+            //foreach (var item in items)
+            //{
+            //    sql.AppendFormat("DELETE FROM {0} WHERE [{1}]={2};",
+            //    CT_TableName,
+            //    CN_SubCenterID, item);
+            //}
+            //return base.ExecuteSQLCommand(sql.ToString());
         }
 
 
@@ -287,62 +342,89 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// </summary>
         public List<CEntitySubCenter> QueryAll()
         {
-            var result = new List<CEntitySubCenter>();
-            var sqlConn = CDBManager.GetInstacne().GetConnection();
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["subcenterId"] = "";
+            //返回结果
+            List<CEntitySubCenter> subcenterList = new List<CEntitySubCenter>();
+            string suffix = "/subcenter/getSubcenter";
+            string url = "http://" + urlPrefix + suffix;
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["subcenter"] = jsonStr;
             try
             {
-                m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
-                m_mutexDataTable.WaitOne();         // 获取内存表的访问权
-                sqlConn.Open();                     // 建立数据库连接
-
-                /**********异步查询数据库**********/
-                String sqlStr = GetQueryAllSQL();
-
-                SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
-
-
-                SqlDataReader reader = sqlCmd.ExecuteReader();
-
-                Debug.Assert(reader.FieldCount == CN_FIELD_COUNT, CT_TableName + "表与类" + CT_EntityName + "中定义字段不符合");
-
-                //  处理查询结果
-                while (reader.Read())
-                {
-                    try
-                    {
-                        var item = new CEntitySubCenter();
-
-                        item.SubCenterID = (Int32)reader[CN_SubCenterID];
-
-                        if (reader[CN_SubCenterName] is DBNull)
-                            item.SubCenterName = null;
-                        else
-                            item.SubCenterName = (String)reader[CN_SubCenterName];
-
-                        if (reader[CN_Comment] is DBNull)
-                            item.Comment = null;
-                        else
-                            item.Comment = (String)reader[CN_Comment];
-
-                        result.Add(item);
-                    }
-                    catch
-                    {
-
-                    }
-                }
+                string resultJson = HttpHelper.Post(url, param);
+                subcenterList = (List<CEntitySubCenter>)HttpHelper.JsonToObject(resultJson, new List<CEntitySubCenter>());
             }
-            catch (Exception exp)
+            catch (Exception e)
             {
-                throw exp;
+                Debug.WriteLine("新增分中心失败");
+                throw e;
             }
-            finally
-            {
-                sqlConn.Close();                    //  关闭数据库连接
-                m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
-                m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
-            }
-            return result;
+            
+            return subcenterList;
+
+
+
+            //var result = new List<CEntitySubCenter>();
+            //var sqlConn = CDBManager.GetInstacne().GetConnection();
+            //try
+            //{
+            //    m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
+            //    m_mutexDataTable.WaitOne();         // 获取内存表的访问权
+            //    sqlConn.Open();                     // 建立数据库连接
+
+            //    /**********异步查询数据库**********/
+            //    String sqlStr = GetQueryAllSQL();
+
+            //    SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
+
+
+            //    SqlDataReader reader = sqlCmd.ExecuteReader();
+
+            //    Debug.Assert(reader.FieldCount == CN_FIELD_COUNT, CT_TableName + "表与类" + CT_EntityName + "中定义字段不符合");
+
+            //    //  处理查询结果
+            //    while (reader.Read())
+            //    {
+            //        try
+            //        {
+            //            var item = new CEntitySubCenter();
+
+            //            item.SubCenterID = (Int32)reader[CN_SubCenterID];
+
+            //            if (reader[CN_SubCenterName] is DBNull)
+            //                item.SubCenterName = null;
+            //            else
+            //                item.SubCenterName = (String)reader[CN_SubCenterName];
+
+            //            if (reader[CN_Comment] is DBNull)
+            //                item.Comment = null;
+            //            else
+            //                item.Comment = (String)reader[CN_Comment];
+
+            //            result.Add(item);
+            //        }
+            //        catch
+            //        {
+
+            //        }
+            //    }
+            //}
+            //catch (Exception exp)
+            //{
+            //    throw exp;
+            //}
+            //finally
+            //{
+            //    sqlConn.Close();                    //  关闭数据库连接
+            //    m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
+            //    m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
+            //}
+            //return result;
         }
         private String GetQueryAllSQL()
         {
