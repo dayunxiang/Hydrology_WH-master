@@ -13,7 +13,7 @@ namespace Hydrology.Forms
 {
     public partial class CMessageBox : Form
     {
-        // 动态显示文本的定时器
+        // 动态显示文本的定时器   ffff
         private System.Timers.Timer m_timer;
         private string m_messageInfo;
         private int m_iDotCount = 0;
