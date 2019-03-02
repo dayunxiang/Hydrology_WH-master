@@ -148,7 +148,7 @@ namespace Hydrology.Entity
     #endregion 枚举定义
 
     /// <summary>
-    /// 将自定义枚举类型转换成字符串或者数据库中的对应字段的帮助类
+    /// 将自定义枚举类型转换成字符串或者数据库中的对应字段的帮助类bbb
     /// </summary>
     public static class CEnumHelper
     {
