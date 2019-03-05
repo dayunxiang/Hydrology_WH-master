@@ -12,7 +12,7 @@ namespace Hydrology.DBManager.DB.SQLServer
 {
     public class CSQLStation : CSQLBase, IStationProxy
     {
-        #region 静态烦烦烦常量
+        #region 静态烦常量
         private const string CT_EntityName = "CEntityStation"; //数据库表Station实体类   
         public static readonly string CT_TableName = "hydlstation"; //数据库测站表的名字
         public static readonly string CN_StationID = "StationID"; //测站的唯一ID
