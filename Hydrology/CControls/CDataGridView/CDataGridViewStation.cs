@@ -1036,8 +1036,11 @@ namespace Hydrology.CControls
                     }
                     if (s.StationType == EStationType.ERainFall)
                     {
-                        base.AddRow(new string[]
+                        if (s.DRainChange != null && s.GSM != null && s.BDSatellite != null && s.BDMemberSatellite != null
+                            && s.Subtran != null)
                         {
+                            base.AddRow(new string[]
+                          {
                         "False",s.StationID.ToString(), s.StationName.ToString(),CEnumHelper.StationTypeToUIStr(s.StationType),
                         //gm 1103
                         subcerterName,"","","",
@@ -1045,7 +1048,8 @@ namespace Hydrology.CControls
                         s.GPRS.ToString(),s.BDSatellite.ToString(),s.BDMemberSatellite.ToString(),s.DVoltageMin.ToString(),
                         s.Maintran.ToString(),s.Subtran.ToString(),s.Datapotocol.ToString(),"无",
                         CEnumHelper.RainSensorTypeToUIStr(m),reportInterval.ToString()
-                                        }, EDataState.ENormal);
+                                          }, EDataState.ENormal);
+                        }
                     }
                     else if (s.StationType == EStationType.ERiverWater)
                     {

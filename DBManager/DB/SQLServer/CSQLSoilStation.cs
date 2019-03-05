@@ -129,12 +129,12 @@ namespace Hydrology.DBManager.DB.SQLServer
             m_tableDataAdded.Columns.Add(CN_GPRS);
             m_tableDataAdded.Columns.Add(CN_BDSatellite);
             m_tableDataAdded.Columns.Add(CN_BDMember);
-          
+
             m_tableDataAdded.Columns.Add(CN_Maintran);
             m_tableDataAdded.Columns.Add(CN_Subtran);
             m_tableDataAdded.Columns.Add(CN_Dataprotocol);
             m_tableDataAdded.Columns.Add(CN_Reportinterval);
-        
+
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_SoilStationInfo;
         }
@@ -225,120 +225,135 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public bool AddSoilStationRange(List<CEntitySoilStation> listStation)
         {
-            if (listStation.Count <= 0)
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/soilstation/insertSoilstation";
+            string url = "http://127.0.0.1:8088/soilstation/insertSoilstation";
+            string jsonStr = HttpHelper.ObjectToJson(listStation);
+            param["soilstation"] = jsonStr;
+            try
             {
-                return true;
+                string resultJson = HttpHelper.Post(url, param);
             }
-            bool result = true;
-            m_mutexDataTable.WaitOne();
-            foreach (CEntitySoilStation entity in listStation)
+            catch (Exception e)
             {
-                DataRow row = m_tableDataAdded.NewRow();
-
-                row[CN_StationId] = entity.StationID;
-                row[CN_SubCenterID] = entity.SubCenterID;
-                // row[CN_SubCenterID] = 1;
-                // row[CN_StationName] = 1;
-                row[CN_StationName] = entity.StationName;
-                // row[CN_StationType] = 1;
-                row[CN_StationType] = (Int32)entity.StationType;
-
-                //      row[CN_DeviceNumber] = entity.StrDeviceNumber;
-                //row[CN_A10] = 0;
-                //row[CN_B10] = 0;
-                //row[CN_C10] = 0;
-                //row[CN_D10] = 0;
-                //row[CN_M10] = 0;
-                //row[CN_N10] = 0;
-
-                //row[CN_A20] = 0;
-                //row[CN_B20] = 0;
-                //row[CN_C20] = 0;
-                //row[CN_D20] = 0;
-                //row[CN_M20] = 0;
-                //row[CN_N20] = 0;
-
-                //row[CN_A30] = 0;
-                //row[CN_B30] = 0;
-                //row[CN_C30] = 0;
-                //row[CN_D30] = 0;
-                //row[CN_M30] = 0;
-                //row[CN_N30] = 0;
-
-                //row[CN_A40] = 0;
-                //row[CN_B40] = 0;
-                //row[CN_C40] = 0;
-                //row[CN_D40] = 0;
-                //row[CN_M40] = 0;
-                //row[CN_N40] = 0;
-
-                //row[CN_A60] = 0;
-                //row[CN_B60] = 0;
-                //row[CN_C60] = 0;
-                //row[CN_D60] = 0;
-                //row[CN_M60] = 0;
-                //row[CN_N60] = 0;
-
-
-                row[CN_A10] = entity.A10;
-                row[CN_B10] = entity.B10;
-                row[CN_C10] = entity.C10;
-                row[CN_D10] = entity.D10;
-                row[CN_M10] = entity.M10;
-                row[CN_N10] = entity.N10;
-
-                row[CN_A20] = entity.A20;
-                row[CN_B20] = entity.B20;
-                row[CN_C20] = entity.C20;
-                row[CN_D20] = entity.D20;
-                row[CN_M20] = entity.M20;
-                row[CN_N20] = entity.N20;
-
-                row[CN_A30] = entity.A30;
-                row[CN_B30] = entity.B30;
-                row[CN_C30] = entity.C30;
-                row[CN_D30] = entity.D30;
-                row[CN_M30] = entity.M30;
-                row[CN_N30] = entity.N30;
-
-                row[CN_A40] = entity.A40;
-                row[CN_B40] = entity.B40;
-                row[CN_C40] = entity.C40;
-                row[CN_D40] = entity.D40;
-                row[CN_M40] = entity.M40;
-                row[CN_N40] = entity.N40;
-
-                row[CN_A60] = entity.A60;
-                row[CN_B60] = entity.B60;
-                row[CN_C60] = entity.C60;
-                row[CN_D60] = entity.D60;
-                row[CN_M60] = entity.M60;
-                row[CN_N60] = entity.N60;
-
-                row[CN_Voltagemin] = entity.VoltageMin;
-
-                row[CN_GSM] = entity.GSM;
-                row[CN_GPRS] = entity.GPRS;
-                row[CN_BDSatellite] = entity.BDSatellite;
-                row[CN_BDMember] = entity.BDMemberSatellite;
-
-                row[CN_Maintran] = entity.Maintran;
-                row[CN_Subtran] = entity.Subtran;
-                row[CN_Dataprotocol] = entity.Datapotocol;
-                row[CN_Reportinterval] = entity.Reportinterval;
-           //     row[CN_Voltagemin] = 0;
-                m_tableDataAdded.Rows.Add(row);
-                //if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
-                //{
-                //    // 如果超过最大值，写入数据库
-                //    m_mutexDataTable.ReleaseMutex();
-                //    result = result && AddDataToDB();
-                //    m_mutexDataTable.WaitOne();
-                //}
+                Debug.WriteLine("新增墒情站信息失败");
+                return false;
             }
-            m_mutexDataTable.ReleaseMutex();
-            result = result && AddDataToDB();
-            return result;
+            return true;
+            // if (listStation.Count <= 0)
+            // {
+            //     return true;
+            // }
+            // bool result = true;
+            // m_mutexDataTable.WaitOne();
+            // foreach (CEntitySoilStation entity in listStation)
+            // {
+            //     DataRow row = m_tableDataAdded.NewRow();
+
+            //     row[CN_StationId] = entity.StationID;
+            //     row[CN_SubCenterID] = entity.SubCenterID;
+            //     // row[CN_SubCenterID] = 1;
+            //     // row[CN_StationName] = 1;
+            //     row[CN_StationName] = entity.StationName;
+            //     // row[CN_StationType] = 1;
+            //     row[CN_StationType] = (Int32)entity.StationType;
+
+            //     //      row[CN_DeviceNumber] = entity.StrDeviceNumber;
+            //     //row[CN_A10] = 0;
+            //     //row[CN_B10] = 0;
+            //     //row[CN_C10] = 0;
+            //     //row[CN_D10] = 0;
+            //     //row[CN_M10] = 0;
+            //     //row[CN_N10] = 0;
+
+            //     //row[CN_A20] = 0;
+            //     //row[CN_B20] = 0;
+            //     //row[CN_C20] = 0;
+            //     //row[CN_D20] = 0;
+            //     //row[CN_M20] = 0;
+            //     //row[CN_N20] = 0;
+
+            //     //row[CN_A30] = 0;
+            //     //row[CN_B30] = 0;
+            //     //row[CN_C30] = 0;
+            //     //row[CN_D30] = 0;
+            //     //row[CN_M30] = 0;
+            //     //row[CN_N30] = 0;
+
+            //     //row[CN_A40] = 0;
+            //     //row[CN_B40] = 0;
+            //     //row[CN_C40] = 0;
+            //     //row[CN_D40] = 0;
+            //     //row[CN_M40] = 0;
+            //     //row[CN_N40] = 0;
+
+            //     //row[CN_A60] = 0;
+            //     //row[CN_B60] = 0;
+            //     //row[CN_C60] = 0;
+            //     //row[CN_D60] = 0;
+            //     //row[CN_M60] = 0;
+            //     //row[CN_N60] = 0;
+
+
+            //     row[CN_A10] = entity.A10;
+            //     row[CN_B10] = entity.B10;
+            //     row[CN_C10] = entity.C10;
+            //     row[CN_D10] = entity.D10;
+            //     row[CN_M10] = entity.M10;
+            //     row[CN_N10] = entity.N10;
+
+            //     row[CN_A20] = entity.A20;
+            //     row[CN_B20] = entity.B20;
+            //     row[CN_C20] = entity.C20;
+            //     row[CN_D20] = entity.D20;
+            //     row[CN_M20] = entity.M20;
+            //     row[CN_N20] = entity.N20;
+
+            //     row[CN_A30] = entity.A30;
+            //     row[CN_B30] = entity.B30;
+            //     row[CN_C30] = entity.C30;
+            //     row[CN_D30] = entity.D30;
+            //     row[CN_M30] = entity.M30;
+            //     row[CN_N30] = entity.N30;
+
+            //     row[CN_A40] = entity.A40;
+            //     row[CN_B40] = entity.B40;
+            //     row[CN_C40] = entity.C40;
+            //     row[CN_D40] = entity.D40;
+            //     row[CN_M40] = entity.M40;
+            //     row[CN_N40] = entity.N40;
+
+            //     row[CN_A60] = entity.A60;
+            //     row[CN_B60] = entity.B60;
+            //     row[CN_C60] = entity.C60;
+            //     row[CN_D60] = entity.D60;
+            //     row[CN_M60] = entity.M60;
+            //     row[CN_N60] = entity.N60;
+
+            //     row[CN_Voltagemin] = entity.VoltageMin;
+
+            //     row[CN_GSM] = entity.GSM;
+            //     row[CN_GPRS] = entity.GPRS;
+            //     row[CN_BDSatellite] = entity.BDSatellite;
+            //     row[CN_BDMember] = entity.BDMemberSatellite;
+
+            //     row[CN_Maintran] = entity.Maintran;
+            //     row[CN_Subtran] = entity.Subtran;
+            //     row[CN_Dataprotocol] = entity.Datapotocol;
+            //     row[CN_Reportinterval] = entity.Reportinterval;
+            ////     row[CN_Voltagemin] = 0;
+            //     m_tableDataAdded.Rows.Add(row);
+            //     //if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
+            //     //{
+            //     //    // 如果超过最大值，写入数据库
+            //     //    m_mutexDataTable.ReleaseMutex();
+            //     //    result = result && AddDataToDB();
+            //     //    m_mutexDataTable.WaitOne();
+            //     //}
+            // }
+            // m_mutexDataTable.ReleaseMutex();
+            // result = result && AddDataToDB();
+            // return result;
         }
 
         /// <summary>
@@ -352,33 +367,60 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            // 删除某条雨量记录
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
+            List<CEntitySoilStation> soilstationList = new List<CEntitySoilStation>();
             for (int i = 0; i < listStationId.Count; i++)
             {
-                ++currentBatchCount;
-                sql.AppendFormat("delete from {0} where {1}={2};",
-                    CT_TableName,
-                    CN_StationId, listStationId[i]
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+                soilstationList.Add(new CEntitySoilStation()
                 {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                    StationID = listStationId[i]
+                });
             }
-            if (!ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "soilstation/deleteSoilstation";
+            string url = "http://127.0.0.1:8088/soilstation/deleteSoilstation";
+            string jsonStr = HttpHelper.ObjectToJson(listStationId);
+            param["soilstation"] = jsonStr;
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除墒情站信息失败");
                 return false;
             }
             return true;
+            //if (listStationId.Count <= 0)
+            //{
+            //    return true;
+            //}
+            //// 删除某条雨量记录
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < listStationId.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    sql.AppendFormat("delete from {0} where {1}={2};",
+            //        CT_TableName,
+            //        CN_StationId, listStationId[i]
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //if (!ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //return true;
         }
 
         /// <summary>
@@ -392,79 +434,98 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
-            for (int i = 0; i < listStation.Count; i++)
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "soilstation/updateSoilstation";
+            string url = "http://127.0.0.1:8088/soilstation/updateSoilstation";
+            string jsonStr = HttpHelper.ObjectToJson(listStation);
+            param["soilstation"] = jsonStr;
+            try
             {
-                ++currentBatchCount;
-                string formatstr = "update {0} set " + GenerateSQL(34, 1) + " , {69}='{70}' ,{71}='{72}' ,{73}='{74}' , {75}='{76}' ,{77}='{78}',  "
-                    + " {79}='{80}' , {81}='{82}' , {83}='{84}' "
-                    + " where {85} = {86};";
-                sql.AppendFormat(formatstr,
-                    CT_TableName,
-                    CN_SubCenterID, listStation[i].SubCenterID,
-                    CN_StationName, String.Format("'{0}'", listStation[i].StationName),
-                    CN_StationType, CEnumHelper.StationTypeToDBStr(listStation[i].StationType),
-                    //   CN_DeviceNumber, listStation[i].StrDeviceNumber,
-                    CN_Voltagemin, listStation[i].VoltageMin,
-                    CN_A10, GetNullableSQLString(listStation[i].A10),
-                    CN_B10, GetNullableSQLString(listStation[i].B10),
-                    CN_C10, GetNullableSQLString(listStation[i].C10),
-                    CN_D10, GetNullableSQLString(listStation[i].D10),
-                    CN_M10, GetNullableSQLString(listStation[i].M10),
-                    CN_N10, GetNullableSQLString(listStation[i].N10),
-                    CN_A20, GetNullableSQLString(listStation[i].A20),
-                    CN_B20, GetNullableSQLString(listStation[i].B20),
-                    CN_C20, GetNullableSQLString(listStation[i].C20),
-                    CN_D20, GetNullableSQLString(listStation[i].D20),
-                    CN_M20, GetNullableSQLString(listStation[i].M20),
-                    CN_N20, GetNullableSQLString(listStation[i].N20),
-                    CN_A30, GetNullableSQLString(listStation[i].A30),
-                    CN_B30, GetNullableSQLString(listStation[i].B30),
-                    CN_C30, GetNullableSQLString(listStation[i].C30),
-                    CN_D30, GetNullableSQLString(listStation[i].D30),
-                    CN_M30, GetNullableSQLString(listStation[i].M30),
-                    CN_N30, GetNullableSQLString(listStation[i].N30),
-                    CN_A40, GetNullableSQLString(listStation[i].A40),
-                    CN_B40, GetNullableSQLString(listStation[i].B40),
-                    CN_C40, GetNullableSQLString(listStation[i].C40),
-                    CN_D40, GetNullableSQLString(listStation[i].D40),
-                    CN_M40, GetNullableSQLString(listStation[i].M40),
-                    CN_N40, GetNullableSQLString(listStation[i].N40),
-                    CN_A60, GetNullableSQLString(listStation[i].A60),
-                    CN_B60, GetNullableSQLString(listStation[i].B60),
-                    CN_C60, GetNullableSQLString(listStation[i].C60),
-                    CN_D60, GetNullableSQLString(listStation[i].D60),
-                    CN_M60, GetNullableSQLString(listStation[i].M60),
-                    CN_N60, GetNullableSQLString(listStation[i].N60),
-                    CN_GSM, listStation[i].GSM,
-                    CN_GPRS,listStation[i].GPRS,
-                    CN_BDSatellite,listStation[i].BDSatellite,
-                    CN_BDMember,listStation[i].BDMemberSatellite,
-                    CN_Maintran,listStation[i].Maintran,
-                    CN_Subtran,listStation[i].Subtran,
-                    CN_Dataprotocol,listStation[i].Datapotocol,
-                    CN_Reportinterval,listStation[i].Reportinterval,
-                    CN_StationId, listStation[i].StationID
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
-                {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                string resultJson = HttpHelper.Post(url, param);
             }
-            // 更新数据库
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            catch (Exception e)
             {
+                Debug.WriteLine("更新墒情站信息失败");
                 return false;
             }
             return true;
+            //if (listStation.Count <= 0)
+            //{
+            //    return true;
+            //}
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < listStation.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    string formatstr = "update {0} set " + GenerateSQL(34, 1) + " , {69}='{70}' ,{71}='{72}' ,{73}='{74}' , {75}='{76}' ,{77}='{78}',  "
+            //        + " {79}='{80}' , {81}='{82}' , {83}='{84}' "
+            //        + " where {85} = {86};";
+            //    sql.AppendFormat(formatstr,
+            //        CT_TableName,
+            //        CN_SubCenterID, listStation[i].SubCenterID,
+            //        CN_StationName, String.Format("'{0}'", listStation[i].StationName),
+            //        CN_StationType, CEnumHelper.StationTypeToDBStr(listStation[i].StationType),
+            //        //   CN_DeviceNumber, listStation[i].StrDeviceNumber,
+            //        CN_Voltagemin, listStation[i].VoltageMin,
+            //        CN_A10, GetNullableSQLString(listStation[i].A10),
+            //        CN_B10, GetNullableSQLString(listStation[i].B10),
+            //        CN_C10, GetNullableSQLString(listStation[i].C10),
+            //        CN_D10, GetNullableSQLString(listStation[i].D10),
+            //        CN_M10, GetNullableSQLString(listStation[i].M10),
+            //        CN_N10, GetNullableSQLString(listStation[i].N10),
+            //        CN_A20, GetNullableSQLString(listStation[i].A20),
+            //        CN_B20, GetNullableSQLString(listStation[i].B20),
+            //        CN_C20, GetNullableSQLString(listStation[i].C20),
+            //        CN_D20, GetNullableSQLString(listStation[i].D20),
+            //        CN_M20, GetNullableSQLString(listStation[i].M20),
+            //        CN_N20, GetNullableSQLString(listStation[i].N20),
+            //        CN_A30, GetNullableSQLString(listStation[i].A30),
+            //        CN_B30, GetNullableSQLString(listStation[i].B30),
+            //        CN_C30, GetNullableSQLString(listStation[i].C30),
+            //        CN_D30, GetNullableSQLString(listStation[i].D30),
+            //        CN_M30, GetNullableSQLString(listStation[i].M30),
+            //        CN_N30, GetNullableSQLString(listStation[i].N30),
+            //        CN_A40, GetNullableSQLString(listStation[i].A40),
+            //        CN_B40, GetNullableSQLString(listStation[i].B40),
+            //        CN_C40, GetNullableSQLString(listStation[i].C40),
+            //        CN_D40, GetNullableSQLString(listStation[i].D40),
+            //        CN_M40, GetNullableSQLString(listStation[i].M40),
+            //        CN_N40, GetNullableSQLString(listStation[i].N40),
+            //        CN_A60, GetNullableSQLString(listStation[i].A60),
+            //        CN_B60, GetNullableSQLString(listStation[i].B60),
+            //        CN_C60, GetNullableSQLString(listStation[i].C60),
+            //        CN_D60, GetNullableSQLString(listStation[i].D60),
+            //        CN_M60, GetNullableSQLString(listStation[i].M60),
+            //        CN_N60, GetNullableSQLString(listStation[i].N60),
+            //        CN_GSM, listStation[i].GSM,
+            //        CN_GPRS,listStation[i].GPRS,
+            //        CN_BDSatellite,listStation[i].BDSatellite,
+            //        CN_BDMember,listStation[i].BDMemberSatellite,
+            //        CN_Maintran,listStation[i].Maintran,
+            //        CN_Subtran,listStation[i].Subtran,
+            //        CN_Dataprotocol,listStation[i].Datapotocol,
+            //        CN_Reportinterval,listStation[i].Reportinterval,
+            //        CN_StationId, listStation[i].StationID
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //// 更新数据库
+            //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //return true;
         }
 
         /// <summary>
@@ -473,73 +534,94 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public List<CEntitySoilStation> QueryAllSoilStation()
         {
-            string sql = " select * from " + CT_TableName;
-            SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
-            DataTable dataTableTmp = new DataTable();
-            adapter.Fill(dataTableTmp);
-            // 构建结果集
-            List<CEntitySoilStation> results = new List<CEntitySoilStation>();
-            for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["stationid"] = "";
+
+            List<CEntitySoilStation> soilstationList = new List<CEntitySoilStation>();
+            string url = "http://127.0.0.1:8088/soilstation/getSoilstation";
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["soilstation"] = jsonStr;
+            try
             {
-                CEntitySoilStation soilStation = new CEntitySoilStation();
-                soilStation.StationID = dataTableTmp.Rows[rowid][CN_StationId].ToString();
-                soilStation.SubCenterID = int.Parse(dataTableTmp.Rows[rowid][CN_SubCenterID].ToString());
-                soilStation.StationName = dataTableTmp.Rows[rowid][CN_StationName].ToString();
-                soilStation.StationType = CEnumHelper.DBStrToStationType(dataTableTmp.Rows[rowid][CN_StationType].ToString());
-
-
-                //  soilStation.StrDeviceNumber = dataTableTmp.Rows[rowid][CN_DeviceNumber].ToString();
-
-
-                soilStation.A10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A10]);
-                soilStation.B10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B10]);
-                soilStation.C10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C10]);
-                soilStation.D10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D10]);
-                soilStation.M10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M10]);
-                soilStation.N10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N10]);
-
-                soilStation.A20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A20]);
-                soilStation.B20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B20]);
-                soilStation.C20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C20]);
-                soilStation.D20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D20]);
-                soilStation.M20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M20]);
-                soilStation.N20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N20]);
-
-                soilStation.A30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A30]);
-                soilStation.B30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B30]);
-                soilStation.C30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C30]);
-                soilStation.D30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D30]);
-                soilStation.M30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M30]);
-                soilStation.N30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N30]);
-
-                soilStation.A40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A40]);
-                soilStation.B40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B40]);
-                soilStation.C40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C40]);
-                soilStation.D40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D40]);
-                soilStation.M40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M40]);
-                soilStation.N40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N40]);
-
-                soilStation.A60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A60]);
-                soilStation.B60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B60]);
-                soilStation.C60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C60]);
-                soilStation.D60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D60]);
-                soilStation.M60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M60]);
-                soilStation.N60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N60]);
-
-                soilStation.VoltageMin = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_Voltagemin]);
-
-                soilStation.GSM = dataTableTmp.Rows[rowid][CN_GSM].ToString();
-                soilStation.GPRS = dataTableTmp.Rows[rowid][CN_GPRS].ToString();
-                soilStation.BDSatellite = dataTableTmp.Rows[rowid][CN_BDSatellite].ToString();
-                soilStation.BDMemberSatellite = dataTableTmp.Rows[rowid][CN_BDMember].ToString();
-
-                soilStation.Maintran = dataTableTmp.Rows[rowid][CN_Maintran].ToString();
-                soilStation.Subtran = dataTableTmp.Rows[rowid][CN_Subtran].ToString();
-                soilStation.Datapotocol = dataTableTmp.Rows[rowid][CN_Dataprotocol].ToString();
-                soilStation.Reportinterval = dataTableTmp.Rows[rowid][CN_Reportinterval].ToString();
-                results.Add(soilStation);
+                string resultJson = HttpHelper.Post(url, param);
+                soilstationList = (List<CEntitySoilStation>)HttpHelper.JsonToObject(resultJson, new List<CEntitySoilStation>());
             }
-            return results;
+            catch (Exception e)
+            {
+                Debug.WriteLine("查询墒情站信息失败");
+                throw e;
+            }
+
+            return soilstationList;
+            //string sql = " select * from " + CT_TableName;
+            //SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
+            //DataTable dataTableTmp = new DataTable();
+            //adapter.Fill(dataTableTmp);
+            //// 构建结果集
+            //List<CEntitySoilStation> results = new List<CEntitySoilStation>();
+            //for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
+            //{
+            //    CEntitySoilStation soilStation = new CEntitySoilStation();
+            //    soilStation.StationID = dataTableTmp.Rows[rowid][CN_StationId].ToString();
+            //    soilStation.SubCenterID = int.Parse(dataTableTmp.Rows[rowid][CN_SubCenterID].ToString());
+            //    soilStation.StationName = dataTableTmp.Rows[rowid][CN_StationName].ToString();
+            //    soilStation.StationType = CEnumHelper.DBStrToStationType(dataTableTmp.Rows[rowid][CN_StationType].ToString());
+
+
+            //    //  soilStation.StrDeviceNumber = dataTableTmp.Rows[rowid][CN_DeviceNumber].ToString();
+
+
+            //    soilStation.A10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A10]);
+            //    soilStation.B10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B10]);
+            //    soilStation.C10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C10]);
+            //    soilStation.D10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D10]);
+            //    soilStation.M10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M10]);
+            //    soilStation.N10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N10]);
+
+            //    soilStation.A20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A20]);
+            //    soilStation.B20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B20]);
+            //    soilStation.C20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C20]);
+            //    soilStation.D20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D20]);
+            //    soilStation.M20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M20]);
+            //    soilStation.N20 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N20]);
+
+            //    soilStation.A30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A30]);
+            //    soilStation.B30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B30]);
+            //    soilStation.C30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C30]);
+            //    soilStation.D30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D30]);
+            //    soilStation.M30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M30]);
+            //    soilStation.N30 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N30]);
+
+            //    soilStation.A40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A40]);
+            //    soilStation.B40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B40]);
+            //    soilStation.C40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C40]);
+            //    soilStation.D40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D40]);
+            //    soilStation.M40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M40]);
+            //    soilStation.N40 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N40]);
+
+            //    soilStation.A60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A60]);
+            //    soilStation.B60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_B60]);
+            //    soilStation.C60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_C60]);
+            //    soilStation.D60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_D60]);
+            //    soilStation.M60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_M60]);
+            //    soilStation.N60 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_N60]);
+
+            //    soilStation.VoltageMin = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_Voltagemin]);
+
+            //    soilStation.GSM = dataTableTmp.Rows[rowid][CN_GSM].ToString();
+            //    soilStation.GPRS = dataTableTmp.Rows[rowid][CN_GPRS].ToString();
+            //    soilStation.BDSatellite = dataTableTmp.Rows[rowid][CN_BDSatellite].ToString();
+            //    soilStation.BDMemberSatellite = dataTableTmp.Rows[rowid][CN_BDMember].ToString();
+
+            //    soilStation.Maintran = dataTableTmp.Rows[rowid][CN_Maintran].ToString();
+            //    soilStation.Subtran = dataTableTmp.Rows[rowid][CN_Subtran].ToString();
+            //    soilStation.Datapotocol = dataTableTmp.Rows[rowid][CN_Dataprotocol].ToString();
+            //    soilStation.Reportinterval = dataTableTmp.Rows[rowid][CN_Reportinterval].ToString();
+            //    results.Add(soilStation);
+            //}
+            //return results;
         }
 
         ////1009
