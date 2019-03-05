@@ -68,51 +68,75 @@ namespace Hydrology.DBManager.DB.SQLServer
         }
 
         /// <summary>
-        /// 获取所有分中心信息
+        /// 获取所有用户信息
         /// </summary>
         public List<CEntityUser> QueryAllUser()
         {
-            var result = new List<CEntityUser>();
-            var sqlConn = CDBManager.GetInstacne().GetConnection();
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["uid"] = "";
+            //返回结果
+            List<CEntityUser> userList = new List<CEntityUser>();
+            //string suffix = "/user/getUser";
+            string url = "http://127.0.0.1:8088/user/getUser";
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["user"] = jsonStr;
             try
             {
-                m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
-                m_mutexDataTable.WaitOne();         // 获取内存表的访问权
-                sqlConn.Open();                     // 建立数据库连接
-
-                String sqlStr = "select * from " + CT_TableName;
-                SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
-                SqlDataReader reader = sqlCmd.ExecuteReader();
-
-                //  处理查询结果
-                while (reader.Read())
-                {
-                    try
-                    {
-                        var user = new CEntityUser();
-                        user.UserID = (Int32)reader[CN_UserID];
-                        user.UserName = (String)reader[CN_UserName];
-                        user.Password = (String)reader[CN_Password];
-                        user.Administrator = (Boolean)reader[CN_Administrator];
-                        result.Add(user);
-                    }
-                    catch
-                    {
-
-                    }
-                }
+                string resultJson = HttpHelper.Post(url, param);
+                userList = (List<CEntityUser>)HttpHelper.JsonToObject(resultJson, new List<CEntityUser>());
             }
-            catch (Exception exp)
+            catch (Exception e)
             {
-                throw exp;
+                Debug.WriteLine("查询用户信息失败");
+                throw e;
             }
-            finally
-            {
-                sqlConn.Close();                    //  关闭数据库连接
-                m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
-                m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
-            }
-            return result;
+
+            return userList;
+            //var result = new List<CEntityUser>();
+            //var sqlConn = CDBManager.GetInstacne().GetConnection();
+            //try
+            //{
+            //    m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
+            //    m_mutexDataTable.WaitOne();         // 获取内存表的访问权
+            //    sqlConn.Open();                     // 建立数据库连接
+
+            //    String sqlStr = "select * from " + CT_TableName;
+            //    SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
+            //    SqlDataReader reader = sqlCmd.ExecuteReader();
+
+            //    //  处理查询结果
+            //    while (reader.Read())
+            //    {
+            //        try
+            //        {
+            //            var user = new CEntityUser();
+            //            user.UserID = (Int32)reader[CN_UserID];
+            //            user.UserName = (String)reader[CN_UserName];
+            //            user.Password = (String)reader[CN_Password];
+            //            user.Administrator = (Boolean)reader[CN_Administrator];
+            //            result.Add(user);
+            //        }
+            //        catch
+            //        {
+
+            //        }
+            //    }
+            //}
+            //catch (Exception exp)
+            //{
+            //    throw exp;
+            //}
+            //finally
+            //{
+            //    sqlConn.Close();                    //  关闭数据库连接
+            //    m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
+            //    m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
+            //}
+            //return result;
         }
 
         /// <summary>
@@ -122,11 +146,30 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public bool AddUserRange(List<CEntityUser> listUser)
         {
-            for (int i = 0; i < listUser.Count; ++i)
+            if (listUser.Count <= 0)
             {
-                AddNewRow(listUser[i]);
+                return true;
             }
-            return AddDataToDB();
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "user/insertUser";
+            string url = "http://127.0.0.1:8088/user/insertUser";
+            string jsonStr = HttpHelper.ObjectToJson(listUser);
+            param["user"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("新增用户失败");
+                return false;
+            }
+            return true;
+            //for (int i = 0; i < listUser.Count; ++i)
+            //{
+            //    AddNewRow(listUser[i]);
+            //}
+            //return AddDataToDB();
         }
 
         /// <summary>
@@ -136,24 +179,43 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public bool UpdateUserRange(List<CEntityUser> listUser)
         {
-            // 除主键外和站点外，其余信息随意修改
             if (listUser.Count <= 0)
             {
                 return true;
             }
-            StringBuilder sql = new StringBuilder();
-            for (int i = 0; i < listUser.Count; i++)
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "user/updateUser";
+            string url = "http://127.0.0.1:8088//user/updateUser";
+            string jsonStr = HttpHelper.ObjectToJson(listUser);
+            param["user"] = jsonStr;
+            try
             {
-                sql.AppendFormat("update {0} set {1}='{2}',{3}='{4}',{5}='{6}' where {7}={8};",
-                    CT_TableName,
-                    CN_UserName, listUser[i].UserName,
-                    CN_Password, listUser[i].Password,
-                    CN_Administrator,listUser[i].Administrator,
-                    CN_UserID, listUser[i].UserID
-                );
+                string resultJson = HttpHelper.Post(url, param);
             }
-            // 更新数据库
-            return base.ExecuteSQLCommand(sql.ToString());
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新用户信息失败");
+                return false;
+            }
+            return true;
+            //// 除主键外和站点外，其余信息随意修改
+            //if (listUser.Count <= 0)
+            //{
+            //    return true;
+            //}
+            //StringBuilder sql = new StringBuilder();
+            //for (int i = 0; i < listUser.Count; i++)
+            //{
+            //    sql.AppendFormat("update {0} set {1}='{2}',{3}='{4}',{5}='{6}' where {7}={8};",
+            //        CT_TableName,
+            //        CN_UserName, listUser[i].UserName,
+            //        CN_Password, listUser[i].Password,
+            //        CN_Administrator,listUser[i].Administrator,
+            //        CN_UserID, listUser[i].UserID
+            //    );
+            //}
+            //// 更新数据库
+            //return base.ExecuteSQLCommand(sql.ToString());
         }
 
         public bool DeleteUserRange(List<int> listUserID)
@@ -162,16 +224,43 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            StringBuilder sql = new StringBuilder();
+            List<CEntityUser> userList = new List<CEntityUser>();
             for (int i = 0; i < listUserID.Count; i++)
             {
-                sql.AppendFormat("delete from {0} where {1} = {2};",
-                    CT_TableName,
-                    CN_UserID, listUserID[i]
-                );
+                userList.Add(new CEntityUser()
+                {
+                    UserID = listUserID[i]
+                });
             }
-            // 更新数据库
-            return base.ExecuteSQLCommand(sql.ToString());
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/deleteSubcenter";
+            string url = "http://127.0.0.1:8088//user/deleteUser";
+            string jsonStr = HttpHelper.ObjectToJson(userList);
+            param["user"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除用户失败");
+                return false;
+            }
+            return true;
+            //if (listUserID.Count <= 0)
+            //{
+            //    return true;
+            //}
+            //StringBuilder sql = new StringBuilder();
+            //for (int i = 0; i < listUserID.Count; i++)
+            //{
+            //    sql.AppendFormat("delete from {0} where {1} = {2};",
+            //        CT_TableName,
+            //        CN_UserID, listUserID[i]
+            //    );
+            //}
+            //// 更新数据库
+            //return base.ExecuteSQLCommand(sql.ToString());
         }
 
         public bool UserLogin(string username, string password, ref bool bAdministrator)
@@ -243,7 +332,7 @@ namespace Hydrology.DBManager.DB.SQLServer
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(conn))
                 {
                     bulkCopy.BatchSize = 1;
-					bulkCopy.BulkCopyTimeout = 1800;
+                    bulkCopy.BulkCopyTimeout = 1800;
                     bulkCopy.DestinationTableName = CT_TableName;
                     //bulkCopy.ColumnMappings.Add(CN_RainID, CN_RainID);
                     bulkCopy.ColumnMappings.Add(CN_UserName, CN_UserName);
@@ -265,7 +354,7 @@ namespace Hydrology.DBManager.DB.SQLServer
                 Debug.WriteLine(ex.ToString());
                 m_mutexWriteToDB.ReleaseMutex();
                 return false;
-                
+
             }
             Debug.WriteLine("###{0} :add {1} lines to db", DateTime.Now, tmp.Rows.Count);
             m_mutexWriteToDB.ReleaseMutex();
