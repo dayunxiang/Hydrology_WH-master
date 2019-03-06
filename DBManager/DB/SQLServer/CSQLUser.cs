@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLUser : CSQLBase, IUserProxy
     {
         #region STATIC_MEMBER
+        private string urlPrefix = "127.0.0.1:8088";
         private static readonly string CT_TableName = "[User]"; //数据库用户表的名字
         private static readonly string CN_UserID = "UID";    //用户的唯一ID
         private static readonly string CN_UserName = "Name";    //分中心记录的唯一ID
@@ -41,6 +42,13 @@ namespace Hydrology.DBManager.DB.SQLServer
 
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_User;
+
+            //初始话接口访问地址
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         // 添加新列
@@ -80,8 +88,8 @@ namespace Hydrology.DBManager.DB.SQLServer
             paramInner["uid"] = "";
             //返回结果
             List<CEntityUser> userList = new List<CEntityUser>();
-            //string suffix = "/user/getUser";
-            string url = "http://127.0.0.1:8088/user/getUser";
+            string suffix = "/user/getUser";
+            string url = "http://" + urlPrefix + suffix;
             string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
             param["user"] = jsonStr;
             try
