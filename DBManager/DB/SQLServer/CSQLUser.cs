@@ -279,31 +279,64 @@ namespace Hydrology.DBManager.DB.SQLServer
                 bAdministrator = true;
                 return true;
             }
-            string sql = string.Format("select {0} from {1} where {2}='{3}' and {4}='{5}';",
-                CN_Administrator,
-                CT_TableName,
-                CN_UserName, username,
-                CN_Password, password);
+
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["uid"] = "";
+            //返回结果
+            List<CEntityUser> userList = new List<CEntityUser>();
+            string suffix = "/user/getUser";
+            string url = "http://" + urlPrefix + suffix;
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["user"] = jsonStr;
             try
             {
-                SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
-                DataTable dataTableTmp = new DataTable();
-                adapter.Fill(dataTableTmp);
-                if (dataTableTmp.Rows.Count > 0)
-                {
-                    // 存在该用户，至于多个同名用户的话，应该作出限制
-                    bAdministrator = Boolean.Parse(dataTableTmp.Rows[0][CN_Administrator].ToString());
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                string resultJson = HttpHelper.Post(url, param);
+                userList = (List<CEntityUser>)HttpHelper.JsonToObject(resultJson, new List<CEntityUser>());
             }
-            catch (System.Exception ex)
+            catch (Exception e)
             {
-                Debug.WriteLine(ex.ToString());
+                Debug.WriteLine("查询用户信息失败");
+                throw e;
             }
+            for(int i = 0; i < userList.Count; i++)
+            {
+                if (userList[i].UserName.Equals(username))
+                {
+                    if (userList[i].Password.Equals(password))
+                    {
+                        bAdministrator = userList[i].Administrator;
+                        return true;
+                    }
+                }
+            }
+            //string sql = string.Format("select {0} from {1} where {2}='{3}' and {4}='{5}';",
+            //    CN_Administrator,
+            //    CT_TableName,
+            //    CN_UserName, username,
+            //    CN_Password, password);
+            //try
+            //{
+            //    SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
+            //    DataTable dataTableTmp = new DataTable();
+            //    adapter.Fill(dataTableTmp);
+            //    if (dataTableTmp.Rows.Count > 0)
+            //    {
+            //        // 存在该用户，至于多个同名用户的话，应该作出限制
+            //        bAdministrator = Boolean.Parse(dataTableTmp.Rows[0][CN_Administrator].ToString());
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        return false;
+            //    }
+            //}
+            //catch (System.Exception ex)
+            //{
+            //    Debug.WriteLine(ex.ToString());
+            //}
             return false;
         }
 
