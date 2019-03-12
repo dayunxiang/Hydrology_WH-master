@@ -378,7 +378,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             Dictionary<string, object> param = new Dictionary<string, object>();
             //string suffix = "soilstation/deleteSoilstation";
             string url = "http://127.0.0.1:8088/soilstation/deleteSoilstation";
-            string jsonStr = HttpHelper.ObjectToJson(listStationId);
+            string jsonStr = HttpHelper.ObjectToJson(soilstationList);
             param["soilstation"] = jsonStr;
             try
             {
@@ -559,7 +559,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             //SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
             //DataTable dataTableTmp = new DataTable();
             //adapter.Fill(dataTableTmp);
-            //// 构建结果集
+            //构建结果集
             //List<CEntitySoilStation> results = new List<CEntitySoilStation>();
             //for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
             //{
@@ -570,7 +570,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             //    soilStation.StationType = CEnumHelper.DBStrToStationType(dataTableTmp.Rows[rowid][CN_StationType].ToString());
 
 
-            //    //  soilStation.StrDeviceNumber = dataTableTmp.Rows[rowid][CN_DeviceNumber].ToString();
+            //    soilStation.StrDeviceNumber = dataTableTmp.Rows[rowid][CN_DeviceNumber].ToString();
 
 
             //    soilStation.A10 = GetCellDecimalValue(dataTableTmp.Rows[rowid][CN_A10]);

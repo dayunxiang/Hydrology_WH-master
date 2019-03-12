@@ -230,7 +230,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             Dictionary<string, object> param = new Dictionary<string, object>();
             //string suffix = "/hydlstation/deleteHydlstation";
             string url = "http://127.0.0.1:8088/hydlstation/deleteHydlstation";
-            string jsonStr = HttpHelper.ObjectToJson(items);
+            string jsonStr = HttpHelper.ObjectToJson(stationList);
             param["hydlstation"] = jsonStr;
             try
             {
@@ -261,7 +261,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             Dictionary<string, object> param = new Dictionary<string, object>();
 
             Dictionary<string, string> paramInner = new Dictionary<string, string>();
-            paramInner["stationId"] = "";
+            paramInner["stationid"] = "";
 
             List<CEntityStation> stationList = new List<CEntityStation>();
             string url = "http://127.0.0.1:8088/hydlstation/getHydlStation";
@@ -283,9 +283,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             //SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
             //DataTable dataTableTmp = new DataTable();
             //adapter.Fill(dataTableTmp);
-            //// 构建结果集
+            //构建结果集
             //List<CEntityStation> results = new List<CEntityStation>();
-            ////dataTableTmp.Rows.Count
+            //dataTableTmp.Rows.Count
             //for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
             //{
             //    CEntityStation station = new CEntityStation();

@@ -1036,9 +1036,7 @@ namespace Hydrology.CControls
                     }
                     if (s.StationType == EStationType.ERainFall)
                     {
-                        if (s.DRainChange != null && s.GSM != null && s.BDSatellite != null && s.BDMemberSatellite != null
-                            && s.Subtran != null)
-                        {
+                        
                             base.AddRow(new string[]
                           {
                         "False",s.StationID.ToString(), s.StationName.ToString(),CEnumHelper.StationTypeToUIStr(s.StationType),
@@ -1049,7 +1047,7 @@ namespace Hydrology.CControls
                         s.Maintran.ToString(),s.Subtran.ToString(),s.Datapotocol.ToString(),"无",
                         CEnumHelper.RainSensorTypeToUIStr(m),reportInterval.ToString()
                                           }, EDataState.ENormal);
-                        }
+                        
                     }
                     else if (s.StationType == EStationType.ERiverWater)
                     {
