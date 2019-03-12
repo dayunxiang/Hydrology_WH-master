@@ -43,6 +43,7 @@ namespace Hydrology.DBManager.DB.SQLServer
 
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_SubCenter;
+            //初始话接口访问地址
             if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
             {
                 XmlHelper.getXMLInfo();

@@ -127,51 +127,51 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/hydlstation/insertHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/insertHydlstation";
-            string jsonStr = HttpHelper.ObjectToJson(items);
-            param["hydlstation"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("新增水情站失败");
-                return false;
-            }
-            return true;
-            //// 实时写入数据库
-            //m_mutexDataTable.WaitOne();
-            //foreach (CEntityStation entity in items)
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "/hydlstation/insertHydlstation";
+            //string url = "http://127.0.0.1:8088/hydlstation/insertHydlstation";
+            //string jsonStr = HttpHelper.ObjectToJson(items);
+            //param["hydlstation"] = jsonStr;
+            //try
             //{
-            //    DataRow row = m_tableDataAdded.NewRow();
-            //    row[CN_StationID] = entity.StationID;
-            //    row[CN_SubCenterID] = entity.SubCenterID;
-            //    row[CN_StationName] = entity.StationName;
-            //    row[CN_StationType] = (Int32)entity.StationType;
-            //    row[CN_WaterBase] = entity.DWaterBase;
-            //    row[CN_WaterMax] = entity.DWaterMax;
-            //    row[CN_WaterMin] = entity.DWaterMin;
-            //    row[CN_WaterChange] = entity.DWaterChange;
-            //    row[CN_RainAccuracy] = entity.DRainAccuracy;
-            //    row[CN_RainChange] = entity.DRainChange;
-            //    row[CN_GSM] = entity.GSM;
-            //    row[CN_GPRS] = entity.GPRS;
-            //    row[CN_BDSatellite] = entity.BDSatellite;
-            //    row[CN_BDMember] = entity.BDMemberSatellite;
-            //    row[CN_VoltageMin] = entity.DVoltageMin;
-            //    row[CN_Maintran] = entity.Maintran;
-            //    row[CN_Subtran] = entity.Subtran;
-            //    row[CN_Dataprotocol] = entity.Datapotocol;
-            //    row[CN_Watersensor] = entity.Watersensor;
-            //    row[CN_Rainsensor] = entity.Rainsensor;
-            //    row[CN_Reportinterval] = entity.Reportinterval;
-            //    m_tableDataAdded.Rows.Add(row);
+            //    string resultJson = HttpHelper.Post(url, param);
             //}
-            //m_mutexDataTable.ReleaseMutex();
-            //return AddDataToDB();
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("新增水情站失败");
+            //    return false;
+            //}
+            //return true;
+            // 实时写入数据库
+            m_mutexDataTable.WaitOne();
+            foreach (CEntityStation entity in items)
+            {
+                DataRow row = m_tableDataAdded.NewRow();
+                row[CN_StationID] = entity.StationID;
+                row[CN_SubCenterID] = entity.SubCenterID;
+                row[CN_StationName] = entity.StationName;
+                row[CN_StationType] = (Int32)entity.StationType;
+                row[CN_WaterBase] = entity.DWaterBase;
+                row[CN_WaterMax] = entity.DWaterMax;
+                row[CN_WaterMin] = entity.DWaterMin;
+                row[CN_WaterChange] = entity.DWaterChange;
+                row[CN_RainAccuracy] = entity.DRainAccuracy;
+                row[CN_RainChange] = entity.DRainChange;
+                row[CN_GSM] = entity.GSM;
+                row[CN_GPRS] = entity.GPRS;
+                row[CN_BDSatellite] = entity.BDSatellite;
+                row[CN_BDMember] = entity.BDMemberSatellite;
+                row[CN_VoltageMin] = entity.DVoltageMin;
+                row[CN_Maintran] = entity.Maintran;
+                row[CN_Subtran] = entity.Subtran;
+                row[CN_Dataprotocol] = entity.Datapotocol;
+                row[CN_Watersensor] = entity.Watersensor;
+                row[CN_Rainsensor] = entity.Rainsensor;
+                row[CN_Reportinterval] = entity.Reportinterval;
+                m_tableDataAdded.Rows.Add(row);
+            }
+            m_mutexDataTable.ReleaseMutex();
+            return AddDataToDB();
         }
 
         /// <summary>
@@ -185,156 +185,152 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/hydlstation/updateHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/updateHydlstation";
-            string jsonStr = HttpHelper.ObjectToJson(items);
-            param["hydlstation"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("更新水情站失败");
-                return false;
-            }
-            return true;
-            //if (items.Count <= 0)
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "/hydlstation/updateHydlstation";
+            //string url = "http://127.0.0.1:8088/hydlstation/updateHydlstation";
+            //string jsonStr = HttpHelper.ObjectToJson(items);
+            //param["hydlstation"] = jsonStr;
+            //try
             //{
-            //    return true;
+            //    string resultJson = HttpHelper.Post(url, param);
             //}
-            //string sqlcommand = "";
-            //foreach (CEntityStation station in items)
+            //catch (Exception e)
             //{
-            //    sqlcommand += GetUpdateSQL(station);
+            //    Debug.WriteLine("更新水情站失败");
+            //    return false;
             //}
-            //return base.ExecuteSQLCommand(sqlcommand);
+            //return true;
+            string sqlcommand = "";
+            foreach (CEntityStation station in items)
+            {
+                sqlcommand += GetUpdateSQL(station);
+            }
+            return base.ExecuteSQLCommand(sqlcommand);
         }
 
 
         public bool DeleteRange(List<string> items)
         {
-            if (items.Count <= 0)
-            {
-                return true;
-            }
-            List<CEntityStation> stationList = new List<CEntityStation>();
-            for (int i = 0; i < items.Count; i++)
-            {
-                stationList.Add(new CEntityStation()
-                {
-                    StationID = items[i]
-                });
-            }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/hydlstation/deleteHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/deleteHydlstation";
-            string jsonStr = HttpHelper.ObjectToJson(items);
-            param["hydlstation"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("删除水情站失败");
-                return false;
-            }
-            return true;
             //if (items.Count <= 0)
             //{
             //    return true;
             //}
-            //StringBuilder sql = new StringBuilder();
-            //foreach (string stationId in items)
+            //List<CEntityStation> stationList = new List<CEntityStation>();
+            //for (int i = 0; i < items.Count; i++)
             //{
-            //    sql.AppendFormat("delete from {0} where {1}='{2}';",
-            //        CT_TableName,
-            //        CN_StationID, stationId);
+            //    stationList.Add(new CEntityStation()
+            //    {
+            //        StationID = items[i]
+            //    });
             //}
-            //return ExecuteSQLCommand(sql.ToString());
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "/hydlstation/deleteHydlstation";
+            //string url = "http://127.0.0.1:8088/hydlstation/deleteHydlstation";
+            //string jsonStr = HttpHelper.ObjectToJson(items);
+            //param["hydlstation"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("删除水情站失败");
+            //    return false;
+            //}
+            //return true;
+            if (items.Count <= 0)
+            {
+                return true;
+            }
+            StringBuilder sql = new StringBuilder();
+            foreach (string stationId in items)
+            {
+                sql.AppendFormat("delete from {0} where {1}='{2}';",
+                    CT_TableName,
+                    CN_StationID, stationId);
+            }
+            return ExecuteSQLCommand(sql.ToString());
         }
 
         public List<CEntityStation> QueryAll()
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
+            //Dictionary<string, object> param = new Dictionary<string, object>();
 
-            Dictionary<string, string> paramInner = new Dictionary<string, string>();
-            paramInner["stationId"] = "";
+            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            //paramInner["stationId"] = "";
 
-            List<CEntityStation> stationList = new List<CEntityStation>();
-            string url = "http://127.0.0.1:8088/hydlstation/getHydlStation";
-            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
-            param["station"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-                stationList = (List<CEntityStation>)HttpHelper.JsonToObject(resultJson, new List<CEntityStation>());
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("查询水情站信息失败");
-                throw e;
-            }
-
-            return stationList;
-            //string sql = " select * from " + CT_TableName;
-            //SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
-            //DataTable dataTableTmp = new DataTable();
-            //adapter.Fill(dataTableTmp);
-            //// 构建结果集
-            //List<CEntityStation> results = new List<CEntityStation>();
-            ////dataTableTmp.Rows.Count
-            //for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
+            //List<CEntityStation> stationList = new List<CEntityStation>();
+            //string url = "http://127.0.0.1:8088/hydlstation/getHydlStation";
+            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            //param["station"] = jsonStr;
+            //try
             //{
-            //    CEntityStation station = new CEntityStation();
-            //    station.StationID = dataTableTmp.Rows[rowid][CN_StationID].ToString();
-            //    station.SubCenterID = int.Parse(dataTableTmp.Rows[rowid][CN_SubCenterID].ToString());
-            //    station.StationName = dataTableTmp.Rows[rowid][CN_StationName].ToString();
-            //    station.StationType = CEnumHelper.DBStrToStationType(dataTableTmp.Rows[rowid][CN_StationType].ToString());
-            //    if (!dataTableTmp.Rows[rowid][CN_WaterBase].ToString().Equals(""))
-            //    {
-            //        station.DWaterBase = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterBase].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_WaterMax].ToString().Equals(""))
-            //    {
-            //        station.DWaterMax = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterMax].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_WaterMin].ToString().Equals(""))
-            //    {
-            //        station.DWaterMin = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterMin].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_WaterChange].ToString().Equals(""))
-            //    {
-            //        station.DWaterChange = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterChange].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_RainAccuracy].ToString().Equals(""))
-            //    {
-            //        station.DRainAccuracy = float.Parse(dataTableTmp.Rows[rowid][CN_RainAccuracy].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_RainChange].ToString().Equals(""))
-            //    {
-            //        station.DRainChange = Decimal.Parse(dataTableTmp.Rows[rowid][CN_RainChange].ToString());
-            //    }
-            //    if (!dataTableTmp.Rows[rowid][CN_VoltageMin].ToString().Equals(""))
-            //    {
-            //        station.DVoltageMin = float.Parse(dataTableTmp.Rows[rowid][CN_VoltageMin].ToString());
-            //    }
-
-            //    station.GSM = dataTableTmp.Rows[rowid][CN_GSM].ToString();
-            //    station.GPRS = dataTableTmp.Rows[rowid][CN_GPRS].ToString();
-            //    station.BDMemberSatellite = dataTableTmp.Rows[rowid][CN_BDMember].ToString();
-            //    station.BDSatellite = dataTableTmp.Rows[rowid][CN_BDSatellite].ToString();
-            //    station.Maintran = dataTableTmp.Rows[rowid][CN_Maintran].ToString();
-            //    station.Subtran = dataTableTmp.Rows[rowid][CN_Subtran].ToString();
-            //    station.Datapotocol = dataTableTmp.Rows[rowid][CN_Dataprotocol].ToString();
-            //    station.Watersensor = dataTableTmp.Rows[rowid][CN_Watersensor].ToString();
-            //    station.Rainsensor = dataTableTmp.Rows[rowid][CN_Rainsensor].ToString();
-            //    station.Reportinterval = dataTableTmp.Rows[rowid][CN_Reportinterval].ToString();
-            //    results.Add(station);
+            //    string resultJson = HttpHelper.Post(url, param);
+            //    stationList = (List<CEntityStation>)HttpHelper.JsonToObject(resultJson, new List<CEntityStation>());
             //}
-            //return results;
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("查询水情站信息失败");
+            //    throw e;
+            //}
+
+            //return stationList;
+            string sql = " select * from " + CT_TableName;
+            SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
+            DataTable dataTableTmp = new DataTable();
+            adapter.Fill(dataTableTmp);
+            // 构建结果集
+            List<CEntityStation> results = new List<CEntityStation>();
+            //dataTableTmp.Rows.Count
+            for (int rowid = 0; rowid < dataTableTmp.Rows.Count; ++rowid)
+            {
+                CEntityStation station = new CEntityStation();
+                station.StationID = dataTableTmp.Rows[rowid][CN_StationID].ToString();
+                station.SubCenterID = int.Parse(dataTableTmp.Rows[rowid][CN_SubCenterID].ToString());
+                station.StationName = dataTableTmp.Rows[rowid][CN_StationName].ToString();
+                station.StationType = CEnumHelper.DBStrToStationType(dataTableTmp.Rows[rowid][CN_StationType].ToString());
+                if (!dataTableTmp.Rows[rowid][CN_WaterBase].ToString().Equals(""))
+                {
+                    station.DWaterBase = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterBase].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_WaterMax].ToString().Equals(""))
+                {
+                    station.DWaterMax = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterMax].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_WaterMin].ToString().Equals(""))
+                {
+                    station.DWaterMin = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterMin].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_WaterChange].ToString().Equals(""))
+                {
+                    station.DWaterChange = Decimal.Parse(dataTableTmp.Rows[rowid][CN_WaterChange].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_RainAccuracy].ToString().Equals(""))
+                {
+                    station.DRainAccuracy = float.Parse(dataTableTmp.Rows[rowid][CN_RainAccuracy].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_RainChange].ToString().Equals(""))
+                {
+                    station.DRainChange = Decimal.Parse(dataTableTmp.Rows[rowid][CN_RainChange].ToString());
+                }
+                if (!dataTableTmp.Rows[rowid][CN_VoltageMin].ToString().Equals(""))
+                {
+                    station.DVoltageMin = float.Parse(dataTableTmp.Rows[rowid][CN_VoltageMin].ToString());
+                }
+
+                station.GSM = dataTableTmp.Rows[rowid][CN_GSM].ToString();
+                station.GPRS = dataTableTmp.Rows[rowid][CN_GPRS].ToString();
+                station.BDMemberSatellite = dataTableTmp.Rows[rowid][CN_BDMember].ToString();
+                station.BDSatellite = dataTableTmp.Rows[rowid][CN_BDSatellite].ToString();
+                station.Maintran = dataTableTmp.Rows[rowid][CN_Maintran].ToString();
+                station.Subtran = dataTableTmp.Rows[rowid][CN_Subtran].ToString();
+                station.Datapotocol = dataTableTmp.Rows[rowid][CN_Dataprotocol].ToString();
+                station.Watersensor = dataTableTmp.Rows[rowid][CN_Watersensor].ToString();
+                station.Rainsensor = dataTableTmp.Rows[rowid][CN_Rainsensor].ToString();
+                station.Reportinterval = dataTableTmp.Rows[rowid][CN_Reportinterval].ToString();
+                results.Add(station);
+            }
+            return results;
         }
 
         public string QueryGPRSById(string id)

@@ -37,46 +37,46 @@ namespace Hydrology.DBManager.DB.SQLServer
         // 添加新列
         public void AddNewRow(CEntityWarningInfo entity)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "user/insertUser";
-            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
-            string jsonStr = HttpHelper.ObjectToJson(entity);
-            param["warninginfo"] = jsonStr;
-            try
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "user/insertUser";
+            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            //string jsonStr = HttpHelper.ObjectToJson(entity);
+            //param["warninginfo"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("新增告警日志失败");
+            //}
+            // 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
+            m_mutexDataTable.WaitOne(); //等待互斥量
+            DataRow row = m_tableDataAdded.NewRow();
+            row[CN_DataTime] = entity.DataTime;
+            row[CN_InfoDetail] = entity.InfoDetail;
+            row[CN_InfoDetail] = entity.InfoDetail;
+            if (entity.WarningInfoCodeType.HasValue)
             {
-                string resultJson = HttpHelper.Post(url, param);
+                row[CN_ErroCode] = CEnumHelper.WarningCodeTypeToDBStr(entity.WarningInfoCodeType.Value);
             }
-            catch (Exception e)
+            else
             {
-                Debug.WriteLine("新增告警日志失败");
+                row[CN_ErroCode] = null;
             }
-            //// 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
-            //m_mutexDataTable.WaitOne(); //等待互斥量
-            //DataRow row = m_tableDataAdded.NewRow();
-            //row[CN_DataTime] = entity.DataTime;
-            //row[CN_InfoDetail] = entity.InfoDetail;
-            //row[CN_InfoDetail] = entity.InfoDetail;
-            //if (entity.WarningInfoCodeType.HasValue)
-            //{
-            //    row[CN_ErroCode] = CEnumHelper.WarningCodeTypeToDBStr(entity.WarningInfoCodeType.Value);
-            //}
-            //else
-            //{
-            //    row[CN_ErroCode] = null;
-            //}
-            //row[CN_StationID] = entity.StrStationId.ToString();
-            //m_tableDataAdded.Rows.Add(row);
-            //if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
-            //{
-            //    // 如果超过最大值，写入数据库
-            //    base.NewTask(() => { AddDataToDB(); });
-            //}
-            //else
-            //{
-            //    // 没有超过缓存最大值，开启定时器进行检测,多次调用Start()会导致重新计数
-            //    m_addTimer.Start();
-            //}
-            //m_mutexDataTable.ReleaseMutex();
+            row[CN_StationID] = entity.StrStationId.ToString();
+            m_tableDataAdded.Rows.Add(row);
+            if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
+            {
+                // 如果超过最大值，写入数据库
+                base.NewTask(() => { AddDataToDB(); });
+            }
+            else
+            {
+                // 没有超过缓存最大值，开启定时器进行检测,多次调用Start()会导致重新计数
+                m_addTimer.Start();
+            }
+            m_mutexDataTable.ReleaseMutex();
         }
 
         public bool Add(CEntityWarningInfo entity)
@@ -96,31 +96,31 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "user/insertUser";
-            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
-            string jsonStr = HttpHelper.ObjectToJson(listEntitys);
-            param["warninginfo"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("新增告警日志失败");
-                return false;
-            }
-            return true;
-            //m_mutexDataTable.WaitOne();
-            //foreach (CEntityWarningInfo entity in listEntitys)
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "user/insertUser";
+            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            //string jsonStr = HttpHelper.ObjectToJson(listEntitys);
+            //param["warninginfo"] = jsonStr;
+            //try
             //{
-            //    DataRow row = m_tableDataAdded.NewRow();
-            //    row[CN_DataTime] = entity.DataTime;
-            //    row[CN_InfoDetail] = entity.InfoDetail;
-            //    m_tableDataAdded.Rows.Add(row);
+            //    string resultJson = HttpHelper.Post(url, param);
             //}
-            //m_mutexDataTable.ReleaseMutex();
-            //return AddDataToDB();
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("新增告警日志失败");
+            //    return false;
+            //}
+            //return true;
+            m_mutexDataTable.WaitOne();
+            foreach (CEntityWarningInfo entity in listEntitys)
+            {
+                DataRow row = m_tableDataAdded.NewRow();
+                row[CN_DataTime] = entity.DataTime;
+                row[CN_InfoDetail] = entity.InfoDetail;
+                m_tableDataAdded.Rows.Add(row);
+            }
+            m_mutexDataTable.ReleaseMutex();
+            return AddDataToDB();
         }
 
         public List<CEntityWarningInfo> QueryWarningInfo(DateTime startTime, DateTime endTime)
@@ -161,45 +161,45 @@ namespace Hydrology.DBManager.DB.SQLServer
         }
         public bool DeleteRange(List<long> listId)
         {
-            if (listId.Count <= 0)
-            {
-                return true;
-            }
-            List<CEntityWarningInfo> warninginfoList = new List<CEntityWarningInfo>();
-            for (int i = 0; i < listId.Count; i++)
-            {
-                warninginfoList.Add(new CEntityWarningInfo()
-                {
-                    WarningInfoID = listId[i]
-                });
-            }
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/subcenter/deleteSubcenter";
-            string url = "http://127.0.0.1:8088//warninginfo/deleteWarninginfo";
-            string jsonStr = HttpHelper.ObjectToJson(warninginfoList);
-            param["warninginfo"] = jsonStr;
-            try
-            {
-                string resultJson = HttpHelper.Post(url, param);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("删除告警日志失败");
-                return false;
-            }
-            return true;
             //if (listId.Count <= 0)
             //{
             //    return true;
             //}
-            //StringBuilder sql = new StringBuilder();
-            //for (int i = 0; i < listId.Count; ++i)
+            //List<CEntityWarningInfo> warninginfoList = new List<CEntityWarningInfo>();
+            //for (int i = 0; i < listId.Count; i++)
             //{
-            //    sql.AppendFormat("delete from {0} where {1} = {2};",
-            //        CT_TableName,
-            //        CN_InfoID, listId[i]);
+            //    warninginfoList.Add(new CEntityWarningInfo()
+            //    {
+            //        WarningInfoID = listId[i]
+            //    });
             //}
-            //return base.ExecuteSQLCommand(sql.ToString());
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////string suffix = "/subcenter/deleteSubcenter";
+            //string url = "http://127.0.0.1:8088//warninginfo/deleteWarninginfo";
+            //string jsonStr = HttpHelper.ObjectToJson(warninginfoList);
+            //param["warninginfo"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("删除告警日志失败");
+            //    return false;
+            //}
+            //return true;
+            if (listId.Count <= 0)
+            {
+                return true;
+            }
+            StringBuilder sql = new StringBuilder();
+            for (int i = 0; i < listId.Count; ++i)
+            {
+                sql.AppendFormat("delete from {0} where {1} = {2};",
+                    CT_TableName,
+                    CN_InfoID, listId[i]);
+            }
+            return base.ExecuteSQLCommand(sql.ToString());
         }
         /// <summary>
         /// 删除时间段内的所有报警信息

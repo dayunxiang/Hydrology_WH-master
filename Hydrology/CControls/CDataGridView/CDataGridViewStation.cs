@@ -1036,8 +1036,9 @@ namespace Hydrology.CControls
                     }
                     if (s.StationType == EStationType.ERainFall)
                     {
-                        if (s.DRainChange != null && s.GSM != null && s.BDSatellite != null && s.BDMemberSatellite != null
-                            && s.Subtran != null)
+                        //if (s.DRainChange != null && s.GSM != null && s.BDSatellite != null && s.BDMemberSatellite != null
+                        //    && s.Subtran != null)
+                        if(true)
                         {
                             base.AddRow(new string[]
                           {
