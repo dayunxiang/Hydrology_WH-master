@@ -81,6 +81,10 @@ namespace Hydrology.Forms
                 {
                     CCurrentLoginUser.Instance.Login(username, password, bAdministrator);
                     //登陆成功,通知主界面进入管理员或者普通用户模式
+                    if (bAdministrator)
+                    {
+                        autority = 1;
+                    }
                     if (UserModeChanged != null)
                     {
                         CSystemInfoMgr.Instance.AddInfo(string.Format("用户{0}登录,权限：{1}", username, bAdministrator ? "管理员" : "普通用户"));
