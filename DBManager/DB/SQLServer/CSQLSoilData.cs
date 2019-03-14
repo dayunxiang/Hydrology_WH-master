@@ -184,6 +184,34 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public List<CEntitySoilData> QueryByStationAndTime(string stationId, DateTime timeStart, DateTime timeEnd)
         {
+            ////传递得参数
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////TODO添加datatime转string timeStart timeEnd
+
+            ////查询条件
+            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            //paramInner["stationid"] = stationId;
+            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["strttime"] = timeStart.ToString();
+            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["endtime"] = timeEnd.ToString();
+            ////返回结果
+            //List<CEntitySoilData> soildataList = new List<CEntitySoilData>();
+            ////string suffix = "/subcenter/getSubcenter";
+            //string url = "http://127.0.0.1:8088/soildata/getSoildata";
+            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            //param["soildata"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //    soildataList = (List<CEntitySoilData>)HttpHelper.JsonToObject(resultJson, new List<CEntitySoilData>());
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("查询墒情信息失败");
+            //    throw e;
+            //}
+            //return soildataList;
             List<CEntitySoilData> results = new List<CEntitySoilData>();
             try
             {
@@ -260,7 +288,7 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// <returns></returns>
         public bool GetLastStationData(string stationId, out CEntitySoilData lastData)
         {
-            lastData = null; 
+            lastData = null;
             string sql = string.Format("select top 1 * from {0} where {1} = {2} order by {3} desc",
                 CT_TableName,
                 CN_StationId, stationId,
@@ -269,7 +297,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             DataTable dataTableTmp = new DataTable();
             adapter.Fill(dataTableTmp);
             // 只有一行噻？不然怎么玩？？
-            if( dataTableTmp.Rows.Count == 1 )
+            if (dataTableTmp.Rows.Count == 1)
             {
                 int rowid = 0;
                 CEntitySoilData data = new CEntitySoilData();
@@ -316,92 +344,141 @@ namespace Hydrology.DBManager.DB.SQLServer
                     data.state = 1;
                 }
                 lastData = data;
-                
+
             }
-          //  Debug.WriteLine(string.Format("查询站点{0}最新墒情数据完成", stationId));
+            //  Debug.WriteLine(string.Format("查询站点{0}最新墒情数据完成", stationId));
             return true;
         }
 
-        public bool UpdateRows(List<CEntitySoilData> listData)
+        public bool UpdateRows(List<CEntitySoilData> soildatas)
         {
-            // 除主键外和站点外，其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
-            for (int i = 0; i < listData.Count; i++)
+            if (soildatas.Count <= 0)
             {
-                ++currentBatchCount;
-                sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}='{8}',{9}={10},{11}={12},{13}={14},{15}={16},{17}={18}, {19}={20}, {21}={22} where {23}={24} and {25}='{26}';",
-                    CT_TableName,
-                    CN_Voltage, listData[i].DVoltage,
-                    CN_ChannelType, CEnumHelper.ChannelTypeToDBStr(listData[i].ChannelType),
-                    CN_MessageType, CEnumHelper.MessageTypeToDBStr(listData[i].MessageType),
-                    CN_RecvTime, listData[i].reciveTime.ToString(),
-                    CN_Moisture10,listData[i].Moisture10,
-                    CN_Moisture20,listData[i].Moisture20,
-                    CN_Moisture40,listData[i].Moisture40,
-                    CN_Voltage10, listData[i].Voltage10,
-                    CN_Voltage20, listData[i].Voltage20,
-                    CN_Voltage40, listData[i].Voltage40,
-                    CN_State, listData[i].state,
-                    CN_StationId, listData[i].StationID,
-                    CN_DataTime, listData[i].DataTime.ToString()
-                    //    CN_VoltageID, voltages[i].VoltageID
-                );
-                //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
-                //{
-                    // 更新数据库
-                    //if (!this.ExecuteSQLCommand(sql.ToString()))
-                    //{
-                    //    // 保存失败
-                    //    return false;
-                    //}
-                   
-                    //currentBatchCount = 0;
-                
+                return true;
             }
-            // 更新数据库
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/updateSubcenter";
+            //string url = "http://" + urlPrefix + suffix;
+            string url = "http://127.0.0.1:8088/soildata/updateSoildata";
+            string jsonStr = HttpHelper.ObjectToJson(soildatas);
+            param["soildata"] = "[{\"ChannelType\":16,\"DVoltage\":12.00,\"DataTime\":\"2018/12/25\",\"MessageType\":1,\"Moisture10\":1,\"Moisture20\":1,\"Moisture30\":null,\"Moisture40\":1,\"Moisture60\":null,\"StationID\":\"3004\",\"StrDeviceNumber\":null,\"Voltage10\":1,\"Voltage20\":1,\"Voltage30\":null,\"Voltage40\":1,\"Voltage60\":null,\"reciveTime\":\"2019-3-14 11:30:44\",\"state\":0}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新墒情信息失败");
                 return false;
             }
-            sql.Clear(); //清除以前的所有命令
-            ResetAll();
             return true;
+            //// 除主键外和站点外，其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < listData.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}='{8}',{9}={10},{11}={12},{13}={14},{15}={16},{17}={18}, {19}={20}, {21}={22} where {23}={24} and {25}='{26}';",
+            //        CT_TableName,
+            //        CN_Voltage, listData[i].DVoltage,
+            //        CN_ChannelType, CEnumHelper.ChannelTypeToDBStr(listData[i].ChannelType),
+            //        CN_MessageType, CEnumHelper.MessageTypeToDBStr(listData[i].MessageType),
+            //        CN_RecvTime, listData[i].reciveTime.ToString(),
+            //        CN_Moisture10,listData[i].Moisture10,
+            //        CN_Moisture20,listData[i].Moisture20,
+            //        CN_Moisture40,listData[i].Moisture40,
+            //        CN_Voltage10, listData[i].Voltage10,
+            //        CN_Voltage20, listData[i].Voltage20,
+            //        CN_Voltage40, listData[i].Voltage40,
+            //        CN_State, listData[i].state,
+            //        CN_StationId, listData[i].StationID,
+            //        CN_DataTime, listData[i].DataTime.ToString()
+            //        //    CN_VoltageID, voltages[i].VoltageID
+            //    );
+            //    //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    //{
+            //        // 更新数据库
+            //        //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        //{
+            //        //    // 保存失败
+            //        //    return false;
+            //        //}
+
+            //        //currentBatchCount = 0;
+
+            //}
+            //// 更新数据库
+            //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //sql.Clear(); //清除以前的所有命令
+            //ResetAll();
+            //return true;
         }
 
         public bool DeleteRows(List<String> soildatas_StationId, List<String> soildatas_StationDate)
         {
-            // 删除某条雨量记录
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
+            if (soildatas_StationId.Count <= 0)
+            {
+                return true;
+            }
+            List<CEntitySoilData> soildataList = new List<CEntitySoilData>();
             for (int i = 0; i < soildatas_StationId.Count; i++)
             {
-                ++currentBatchCount;
-                sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
-                    CT_TableName,
-                    CN_StationId, soildatas_StationId[i].ToString(),
-                    CN_DataTime, soildatas_StationDate[i].ToString()
-                    // CN_VoltageID, voltages[i].ToString()
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+                soildataList.Add(new CEntitySoilData()
                 {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                    StationID = soildatas_StationId[i],
+                    DataTime = Convert.ToDateTime(soildatas_StationDate[i]),
+                    reciveTime = Convert.ToDateTime("2019/3/13 15:00:00")
+                });
             }
-            // 如何考虑线程同异步
-            if (!ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
+            string url = "http://127.0.0.1:8088/soildata/deleteSoildata";
+            string jsonStr = HttpHelper.ObjectToJson(soildataList);
+            param["soildata"] = "[{\"ChannelType\":0,\"DVoltage\":0,\"DataTime\":\"2018/12/25\",\"MessageType\":0,\"Moisture10\":null,\"Moisture20\":null,\"Moisture30\":null,\"Moisture40\":null,\"Moisture60\":null,\"StationID\":\"3004\",\"StrDeviceNumber\":null,\"Voltage10\":null,\"Voltage20\":null,\"Voltage30\":null,\"Voltage40\":null,\"Voltage60\":null,\"reciveTime\":\"\\/Date(1552460400000+0800)\\/\",\"state\":0}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除墒情信息失败");
                 return false;
             }
-            ResetAll();
             return true;
+            //// 删除某条雨量记录
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < soildatas_StationId.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
+            //        CT_TableName,
+            //        CN_StationId, soildatas_StationId[i].ToString(),
+            //        CN_DataTime, soildatas_StationDate[i].ToString()
+            //        // CN_VoltageID, voltages[i].ToString()
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //// 如何考虑线程同异步
+            //if (!ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //ResetAll();
+            //return true;
         }
         #endregion
 
@@ -437,7 +514,7 @@ namespace Hydrology.DBManager.DB.SQLServer
                 {
                     bulkCopy.DestinationTableName = CT_TableName;
                     bulkCopy.BatchSize = 1;
-					bulkCopy.BulkCopyTimeout = 1800;
+                    bulkCopy.BulkCopyTimeout = 1800;
                     bulkCopy.ColumnMappings.Add(CN_StationId, CN_StationId);
                     bulkCopy.ColumnMappings.Add(CN_DataTime, CN_DataTime);
                     bulkCopy.ColumnMappings.Add(CN_Voltage, CN_Voltage);

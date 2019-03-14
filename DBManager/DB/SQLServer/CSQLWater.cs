@@ -210,108 +210,200 @@ namespace Hydrology.DBManager.DB.SQLServer
 
         public void AddNewRows_1(List<CEntityWater> waters)
         {
-            // 记录超过写入上线条，或者时间超过1分钟，就将当前的数据写入数据库
-            m_mutexDataTable.WaitOne(); //等待互斥量
-            foreach (CEntityWater water in waters)
+            if (waters.Count <= 0)
             {
-                DataRow row = m_tableDataAdded.NewRow();
-                row[CN_StationId] = water.StationID;
-                row[CN_DataTime] = water.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-                row[CN_WaterStage] = water.WaterStage;
-                row[CN_WaterFlow] = water.WaterFlow;
-                row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(water.MessageType);
-                row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(water.ChannelType);
-                row[CN_RecvDataTime] = water.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-                row[CN_State] = water.state;
-                m_tableDataAdded.Rows.Add(row);
-
-                // 判断是否需要创建新分区
-                //CSQLPartitionMgr.Instance.MaintainWater(water.TimeCollect);
             }
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string url = "http://127.0.0.1:8088/water/insertWater";
+            string jsonStr = HttpHelper.ObjectToJson(waters);
+            param["water"] = "[{\"ChannelType\":6,\"MessageType\":1,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 14:00:00\",\"TimeRecieved\":\"2019-3-13 14:45:00\",\"WaterFlow\":14,\"WaterID\":0,\"WaterStage\":14,\"state\":1}]";
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("添加水位信息失败");
+            }
+            //// 记录超过写入上线条，或者时间超过1分钟，就将当前的数据写入数据库
+            //m_mutexDataTable.WaitOne(); //等待互斥量
+            //foreach (CEntityWater water in waters)
+            //{
+            //    DataRow row = m_tableDataAdded.NewRow();
+            //    row[CN_StationId] = water.StationID;
+            //    row[CN_DataTime] = water.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+            //    row[CN_WaterStage] = water.WaterStage;
+            //    row[CN_WaterFlow] = water.WaterFlow;
+            //    row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(water.MessageType);
+            //    row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(water.ChannelType);
+            //    row[CN_RecvDataTime] = water.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+            //    row[CN_State] = water.state;
+            //    m_tableDataAdded.Rows.Add(row);
 
-            // 直接写入数据库
-            NewTask(() => { AddDataToDB(); });
-            m_mutexDataTable.ReleaseMutex();
+            //    // 判断是否需要创建新分区
+            //    //CSQLPartitionMgr.Instance.MaintainWater(water.TimeCollect);
+            //}
+
+            //// 直接写入数据库
+            //NewTask(() => { AddDataToDB(); });
+            //m_mutexDataTable.ReleaseMutex();
         }
 
         public bool DeleteRows(List<String> waters_StationId, List<String> waters_StationDate)
         {
-            // 删除某条水位记录
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
+            if (waters_StationId.Count <= 0)
+            {
+                return true;
+            }
+            List<CEntityWater> waterList = new List<CEntityWater>();
             for (int i = 0; i < waters_StationId.Count; i++)
             {
-                ++currentBatchCount;
-                CTF_TableName = "water" + DateTime.Parse(waters_StationDate[i]).Year.ToString() + DateTime.Parse(waters_StationDate[i]).Month.ToString() + (DateTime.Parse(waters_StationDate[i]).Day > 15 ? "B" : "A");
-                sql.AppendFormat("delete from {0} where {1}={2} and {3} = '{4}';",
-                    CTF_TableName,
-                    CN_StationId, waters_StationId[i].ToString(),
-                    CN_DataTime, waters_StationDate[i].ToString()
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+                waterList.Add(new CEntityWater()
                 {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                    StationID = waters_StationId[i],
+                    TimeCollect = Convert.ToDateTime(waters_StationDate[i]),
+                    TimeRecieved = Convert.ToDateTime("2019/3/13 15:00:00")
+                });
             }
-            if (!ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
+            string url = "http://127.0.0.1:8088/water/deleteWater";
+            string jsonStr = HttpHelper.ObjectToJson(waterList);
+            param["water"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 14:00:00\",\"TimeRecieved\":\"\\/Date(1552460400000+0800)\\/\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":0,\"state\":0}]"
+;
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除水位信息失败");
                 return false;
             }
-            ResetAll();
-            // 如何考虑线程同异步
             return true;
+            //// 删除某条水位记录
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < waters_StationId.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    CTF_TableName = "water" + DateTime.Parse(waters_StationDate[i]).Year.ToString() + DateTime.Parse(waters_StationDate[i]).Month.ToString() + (DateTime.Parse(waters_StationDate[i]).Day > 15 ? "B" : "A");
+            //    sql.AppendFormat("delete from {0} where {1}={2} and {3} = '{4}';",
+            //        CTF_TableName,
+            //        CN_StationId, waters_StationId[i].ToString(),
+            //        CN_DataTime, waters_StationDate[i].ToString()
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //if (!ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //ResetAll();
+            //// 如何考虑线程同异步
+            //return true;
         }
 
         public bool UpdateRows(List<Hydrology.Entity.CEntityWater> waters)
         {
-            // 除主键外,其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
-            for (int i = 0; i < waters.Count; i++)
+            if (waters.Count <= 0)
             {
-                ++currentBatchCount;
-                CTF_TableName = "water" + waters[i].TimeCollect.Year.ToString() + waters[i].TimeCollect.Month.ToString() + (waters[i].TimeCollect.Day > 15 ? "B" : "A");
-                sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12} where {13}={14} and {15}='{16}';",
-                    CTF_TableName,
-                    CN_WaterStage, waters[i].WaterStage,
-                    CN_WaterFlow, (waters[i].WaterFlow.HasValue ? waters[i].WaterFlow.Value.ToString() : "null"),
-                    CN_TransType, CEnumHelper.ChannelTypeToDBStr(waters[i].ChannelType),
-                    CN_MsgType, CEnumHelper.MessageTypeToDBStr(waters[i].MessageType),
-                    CN_State, waters[i].state,
-                    CN_RecvDataTime, DateTimeToDBStr(waters[i].TimeRecieved),
-                    CN_StationId, waters[i].StationID,
-                    CN_DataTime, waters[i].TimeCollect.ToString()
-                //   CN_WaterID, waters[i].WaterID
-                );
-                //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
-                //{
-                //    // 更新数据库
-                //    if (!this.ExecuteSQLCommand(sql.ToString()))
-                //    {
-                //        return false;
-                //    }
-                //    sql.Clear(); //清除以前的所有命令
-                //    currentBatchCount = 0;
-                //}
+                return true;
             }
-            // 更新数据库
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/updateSubcenter";
+            //string url = "http://" + urlPrefix + suffix;
+            string url = "http://127.0.0.1:8088/water/updateWater";
+            string jsonStr = HttpHelper.ObjectToJson(waters);
+            param["water"] = "[{\"ChannelType\":16,\"MessageType\":1,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 15:00:00\",\"TimeRecieved\":\"2019/3/13 15:45:44\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":14,\"state\":2}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新水位信息失败");
                 return false;
             }
-            sql.Clear(); //清除以前的所有命令
-            ResetAll();
             return true;
+            //// 除主键外,其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < waters.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    CTF_TableName = "water" + waters[i].TimeCollect.Year.ToString() + waters[i].TimeCollect.Month.ToString() + (waters[i].TimeCollect.Day > 15 ? "B" : "A");
+            //    sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12} where {13}={14} and {15}='{16}';",
+            //        CTF_TableName,
+            //        CN_WaterStage, waters[i].WaterStage,
+            //        CN_WaterFlow, (waters[i].WaterFlow.HasValue ? waters[i].WaterFlow.Value.ToString() : "null"),
+            //        CN_TransType, CEnumHelper.ChannelTypeToDBStr(waters[i].ChannelType),
+            //        CN_MsgType, CEnumHelper.MessageTypeToDBStr(waters[i].MessageType),
+            //        CN_State, waters[i].state,
+            //        CN_RecvDataTime, DateTimeToDBStr(waters[i].TimeRecieved),
+            //        CN_StationId, waters[i].StationID,
+            //        CN_DataTime, waters[i].TimeCollect.ToString()
+            //    //   CN_WaterID, waters[i].WaterID
+            //    );
+            //    //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    //{
+            //    //    // 更新数据库
+            //    //    if (!this.ExecuteSQLCommand(sql.ToString()))
+            //    //    {
+            //    //        return false;
+            //    //    }
+            //    //    sql.Clear(); //清除以前的所有命令
+            //    //    currentBatchCount = 0;
+            //    //}
+            //}
+            //// 更新数据库
+            //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //sql.Clear(); //清除以前的所有命令
+            //ResetAll();
+            //return true;
         }
 
         public void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
+            ////传递得参数
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////TODO添加datatime转string timeStart timeEnd
+
+            ////查询条件
+            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            //paramInner["stationid"] = stationId;
+            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["strttime"] = timeStart.ToString();
+            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["endtime"] = timeEnd.ToString();
+            ////返回结果
+            //List<CEntityWater> waterList = new List<CEntityWater>();
+            ////string suffix = "/subcenter/getSubcenter";
+            //string url = "http://127.0.0.1:8088/water/getWater";
+            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            //param["water"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //    waterList = (List<CEntityWater>)HttpHelper.JsonToObject(resultJson, new List<CEntityWater>());
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("查询水位信息失败");
+            //    throw e;
+            //}
             // 设置查询条件
             if (null == m_strStaionId)
             {
