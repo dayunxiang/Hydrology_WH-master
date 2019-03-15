@@ -237,6 +237,7 @@
             this.MI_DatabaseConfig.Size = new System.Drawing.Size(161, 22);
             this.MI_DatabaseConfig.Tag = "数据库配置";
             this.MI_DatabaseConfig.Text = "数据库配置(&C)...";
+            this.MI_DatabaseConfig.Visible = false;
             // 
             // MI_VoiceConfig
             // 
@@ -334,6 +335,7 @@
             this.MI_SoilStationMgr.Size = new System.Drawing.Size(157, 22);
             this.MI_SoilStationMgr.Tag = "墒情站配置";
             this.MI_SoilStationMgr.Text = "墒情测站管理...";
+            this.MI_SoilStationMgr.Visible = false;
             // 
             // toolStripMenuItem1
             // 

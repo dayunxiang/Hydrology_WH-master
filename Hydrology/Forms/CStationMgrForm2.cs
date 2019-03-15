@@ -181,7 +181,7 @@ namespace Hydrology.Forms
                     textBox_WaterBase.Enabled = true;
                     textBox_WaterBase.Text = "0.0";
                 }
-                if (cmb_StationType.Text == "水文站")
+                if (cmb_StationType.Text == "水文站" || cmb_StationType.Text == "河道站")
                 {
                     cmb_RainAccuracy.Enabled = true;
                     cmb_RainAccuracy.Items.Remove("无");
@@ -961,7 +961,7 @@ namespace Hydrology.Forms
                     textBox_WaterBase.Enabled = true;
                     textBox_WaterBase.Text = "0.0";
                 }
-                if (cmb_StationType.Text == "水文站")
+                if (cmb_StationType.Text == "水文站" || cmb_StationType.Text == "河道站") 
                 {
                     cmb_RainAccuracy.Enabled = true;
                     cmb_RainAccuracy.Items.Remove("无");

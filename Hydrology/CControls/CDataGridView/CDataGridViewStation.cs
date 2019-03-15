@@ -420,6 +420,7 @@ namespace Hydrology.CControls
                     cmb_StationType.Items.Add(CEnumHelper.StationTypeToUIStr(EStationType.ERainFall));
                     cmb_StationType.Items.Add(CEnumHelper.StationTypeToUIStr(EStationType.ERiverWater));
                     cmb_StationType.Items.Add(CEnumHelper.StationTypeToUIStr(EStationType.EHydrology));
+                    cmb_StationType.Items.Add(CEnumHelper.StationTypeToUIStr(EStationType.EH));
                     base.SetColumnEditStyle(listHeader.IndexOf(CS_Stationtype), cmb_StationType);
 
 
@@ -1061,7 +1062,7 @@ namespace Hydrology.CControls
                         "无", s.Reportinterval.ToString()
                                         }, EDataState.ENormal);
                     }
-                    else if (s.StationType == EStationType.EHydrology)
+                    else if (s.StationType == EStationType.EHydrology || s.StationType == EStationType.EH)
                     {
                         base.AddRow(new string[]
                     {
