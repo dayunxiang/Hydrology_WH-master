@@ -194,8 +194,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
         }
 
-        public void AddNewRows(List<Hydrology.Entity.CEntityRain> rains)
+        public void AddNewRows(List<CEntityRain> rains)
         {
+
             // 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
             m_mutexDataTable.WaitOne(); //等待互斥量
             foreach (CEntityRain rain in rains)
@@ -243,91 +244,167 @@ namespace Hydrology.DBManager.DB.SQLServer
 
         public bool DeleteRows(List<String> rains_StationId, List<String> rains_StationDate)
         {
-            // 删除某条雨量记录
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
+            if (rains_StationId.Count <= 0)
+            {
+                return true;
+            }
+            List<CEntityRain> rainList = new List<CEntityRain>();
             for (int i = 0; i < rains_StationId.Count; i++)
             {
-                ++currentBatchCount;
-                CTF_TableName = "rain" + DateTime.Parse(rains_StationDate[i]).Year.ToString() + DateTime.Parse(rains_StationDate[i]).Month.ToString() + (DateTime.Parse(rains_StationDate[i]).Day > 15 ? "B" : "A");
-                sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
-                    CTF_TableName,
-                    CN_StationId, rains_StationId[i].ToString(),
-                    CN_DataTime, rains_StationDate[i].ToString()
-                // CN_RainID, rains[i].ToString()
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+                rainList.Add(new CEntityRain()
                 {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                    StationID = rains_StationId[i],
+                    TimeCollect = Convert.ToDateTime(rains_StationDate[i]),
+                    TimeRecieved = Convert.ToDateTime("2019/3/13 15:00:00")
+                });
             }
-            if (!ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
+            string url = "http://127.0.0.1:8088/rain/deleteRain";
+            string jsonStr = HttpHelper.ObjectToJson(rainList);
+            param["rain"] = "[{\"BState\":0,\"ChannelType\":0,\"DayRain\":null,\"DifferneceRain\":null,\"MessageType\":0,\"PeriodRain\":null,\"RainID\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 11:00:00\",\"TimeRecieved\":\"2019/3/13 15:00:00\",\"TotalRain\":null}]";
+            try
             {
-                ExecuteSQLCommand(sql.ToString());
-                //return false;
+                string resultJson = HttpHelper.Post(url, param);
             }
-            ResetAll();
-            // 如何考虑线程同异步
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除雨量信息失败");
+                return false;
+            }
             return true;
+            //// 删除某条雨量记录
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < rains_StationId.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    CTF_TableName = "rain" + DateTime.Parse(rains_StationDate[i]).Year.ToString() + DateTime.Parse(rains_StationDate[i]).Month.ToString() + (DateTime.Parse(rains_StationDate[i]).Day > 15 ? "B" : "A");
+            //    sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
+            //        CTF_TableName,
+            //        CN_StationId, rains_StationId[i].ToString(),
+            //        CN_DataTime, rains_StationDate[i].ToString()
+            //    // CN_RainID, rains[i].ToString()
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //if (!ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    ExecuteSQLCommand(sql.ToString());
+            //    //return false;
+            //}
+            //ResetAll();
+            //// 如何考虑线程同异步
+            //return true;
 
         }
 
         public bool UpdateRows(List<Hydrology.Entity.CEntityRain> rains)
         {
-            // 除主键外和站点外，其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
-            for (int i = 0; i < rains.Count; i++)
+            if (rains.Count <= 0)
             {
-
-                ++currentBatchCount;
-                CTF_TableName = "rain" + rains[i].TimeCollect.Year.ToString() + rains[i].TimeCollect.Month.ToString() + (rains[i].TimeCollect.Day > 15 ? "B" : "A");
-                sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12},{13}='{14}',{15} ='{16}' where {17}={18} and {19}='{20}';",
-                    CTF_TableName,
-                    //  CN_DataTime, DateTimeToDBStr(rains[i].TimeCollect),
-                    CN_PeriodRain, rains[i].PeriodRain.HasValue ? rains[i].PeriodRain.Value.ToString() : "null",
-                    CN_TotalRain, rains[i].TotalRain.HasValue ? rains[i].TotalRain.Value.ToString() : "null",
-                    CN_DifferenceRain, rains[i].DifferneceRain.HasValue ? rains[i].DifferneceRain.Value.ToString() : "null",
-                    CN_DayRain, rains[i].DayRain.HasValue ? rains[i].DayRain.Value.ToString() : "null",
-                    CN_TransType, CEnumHelper.ChannelTypeToDBStr(rains[i].ChannelType),
-                    CN_MsgType, CEnumHelper.MessageTypeToDBStr(rains[i].MessageType),
-                    CN_RecvDataTime, rains[i].TimeRecieved.ToString(),
-                    CN_DataState, rains[i].BState,
-                    //CN_RainID, rains[i].RainID
-                    CN_StationId, rains[i].StationID,
-                    CN_DataTime, rains[i].TimeCollect.ToString()
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
-                {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                return true;
             }
-            // 更新数据库
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/updateSubcenter";
+            //string url = "http://" + urlPrefix + suffix;
+            string url = "http://127.0.0.1:8088/rain/updateRain";
+            string jsonStr = HttpHelper.ObjectToJson(rains);
+            param["rain"] = jsonStr;
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新雨量信息失败");
                 return false;
             }
-            ResetAll();
             return true;
+            //// 除主键外和站点外，其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < rains.Count; i++)
+            //{
+
+            //    ++currentBatchCount;
+            //    CTF_TableName = "rain" + rains[i].TimeCollect.Year.ToString() + rains[i].TimeCollect.Month.ToString() + (rains[i].TimeCollect.Day > 15 ? "B" : "A");
+            //    sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12},{13}='{14}',{15} ='{16}' where {17}={18} and {19}='{20}';",
+            //        CTF_TableName,
+            //        //  CN_DataTime, DateTimeToDBStr(rains[i].TimeCollect),
+            //        CN_PeriodRain, rains[i].PeriodRain.HasValue ? rains[i].PeriodRain.Value.ToString() : "null",
+            //        CN_TotalRain, rains[i].TotalRain.HasValue ? rains[i].TotalRain.Value.ToString() : "null",
+            //        CN_DifferenceRain, rains[i].DifferneceRain.HasValue ? rains[i].DifferneceRain.Value.ToString() : "null",
+            //        CN_DayRain, rains[i].DayRain.HasValue ? rains[i].DayRain.Value.ToString() : "null",
+            //        CN_TransType, CEnumHelper.ChannelTypeToDBStr(rains[i].ChannelType),
+            //        CN_MsgType, CEnumHelper.MessageTypeToDBStr(rains[i].MessageType),
+            //        CN_RecvDataTime, rains[i].TimeRecieved.ToString(),
+            //        CN_DataState, rains[i].BState,
+            //        //CN_RainID, rains[i].RainID
+            //        CN_StationId, rains[i].StationID,
+            //        CN_DataTime, rains[i].TimeCollect.ToString()
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //// 更新数据库
+            //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //ResetAll();
+            //return true;
         }
 
         public void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
-            // 设置查询条件
+            ////传递得参数
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////TODO添加datatime转string timeStart timeEnd
+
+            ////查询条件
+            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            //paramInner["stationid"] = stationId;
+            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["strttime"] = timeStart.ToString();
+            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["endtime"] = timeEnd.ToString();
+            ////返回结果
+            //List<CEntityRain> rainList = new List<CEntityRain>();
+            ////string suffix = "/subcenter/getSubcenter";
+            //string url = "http://127.0.0.1:8088/rain/getRain";
+            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            //param["rain"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //    rainList = (List<CEntityRain>)HttpHelper.JsonToObject(resultJson, new List<CEntityRain>());
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("查询分中心失败");
+            //    throw e;
+            //}
+            //设置查询条件
             if (null == m_strStaionId)
             {
                 // 第一次查询
@@ -1497,101 +1574,136 @@ namespace Hydrology.DBManager.DB.SQLServer
 
         public void AddNewRows_DataModify(List<Hydrology.Entity.CEntityRain> rains)
         {
-            // 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
-            m_mutexDataTable.WaitOne(); //等待互斥量
-            foreach (CEntityRain rain in rains)
+            if (rains.Count <= 0)
             {
-                DataRow row = m_tableDataAdded.NewRow();
-                row[CN_StationId] = rain.StationID;
-                row[CN_DataTime] = rain.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-                row[CN_PeriodRain] = rain.PeriodRain;
-                row[CN_DifferenceRain] = rain.DifferneceRain;
-                row[CN_TotalRain] = rain.TotalRain;
-                row[CN_DayRain] = rain.DayRain;
-
-                row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(rain.ChannelType);
-                row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(rain.MessageType);
-
-                row[CN_RecvDataTime] = rain.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-
-                row[CN_DataState] = rain.BState;
-                m_tableDataAdded.Rows.Add(row);
-
-                // 判断是否需要创建新分区
-                // CSQLPartitionMgr.Instance.MaintainRain(rain.TimeCollect);
             }
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string url = "http://127.0.0.1:8088/rain/insertRain";
+            string jsonStr = HttpHelper.ObjectToJson(rains);
+            param["rain"] = "[{\"BState\":1,\"ChannelType\":6,\"DayRain\":null,\"DifferneceRain\":null,\"MessageType\":2,\"PeriodRain\":null,\"RainID\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 11:00:00\",\"TimeRecieved\":\"2019-3-13 11:15:00\",\"TotalRain\":4}]";
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("添加雨量信息失败");
+            }
+            //// 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
+            //m_mutexDataTable.WaitOne(); //等待互斥量
+            //foreach (CEntityRain rain in rains)
+            //{
+            //    DataRow row = m_tableDataAdded.NewRow();
+            //    row[CN_StationId] = rain.StationID;
+            //    row[CN_DataTime] = rain.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+            //    row[CN_PeriodRain] = rain.PeriodRain;
+            //    row[CN_DifferenceRain] = rain.DifferneceRain;
+            //    row[CN_TotalRain] = rain.TotalRain;
+            //    row[CN_DayRain] = rain.DayRain;
 
-            // 如果超过最大值，写入数据库
-            NewTask(() => { AddDataToDB(); });
+            //    row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(rain.ChannelType);
+            //    row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(rain.MessageType);
 
-            // AddDataToDB(); 
-            m_mutexDataTable.ReleaseMutex();
+            //    row[CN_RecvDataTime] = rain.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+
+            //    row[CN_DataState] = rain.BState;
+            //    m_tableDataAdded.Rows.Add(row);
+
+            //    // 判断是否需要创建新分区
+            //    // CSQLPartitionMgr.Instance.MaintainRain(rain.TimeCollect);
+            //}
+
+            //// 如果超过最大值，写入数据库
+            //NewTask(() => { AddDataToDB(); });
+
+            //// AddDataToDB(); 
+            //m_mutexDataTable.ReleaseMutex();
         }
         public bool UpdateRows_DataModify(List<CEntityRain> rains)
         {
-            // 除主键外和站点外，其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            //  int currentBatchCount = 0;
-            for (int i = 0; i < rains.Count; i++)
+            if (rains.Count <= 0)
             {
-                //   ++currentBatchCount;
-                //第一个修改，下一条最近的数据
-                CTF_TableName = "rain" + rains[i].TimeCollect.Year.ToString() + rains[i].TimeCollect.Month.ToString() + (rains[1].TimeCollect.Day > 15 ? "B" : "A");
-                sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12},{13}='{14}',{15} ='{16}' where {17}={18} and {19}='{20}';",
-                    CTF_TableName,
-                    //  CN_DataTime, DateTimeToDBStr(rains[i].TimeCollect),
-                    CN_PeriodRain, rains[i].PeriodRain.HasValue ? rains[i].PeriodRain.Value.ToString() : "null",
-                    CN_TotalRain, rains[i].TotalRain.HasValue ? rains[i].TotalRain.Value.ToString() : "null",
-                    CN_DifferenceRain, rains[i].DifferneceRain.HasValue ? rains[i].DifferneceRain.Value.ToString() : "null",
-                    CN_DayRain, rains[i].DayRain.HasValue ? rains[i].DayRain.Value.ToString() : "null",
-                    CN_TransType, CEnumHelper.ChannelTypeToDBStr(rains[i].ChannelType),
-                    CN_MsgType, CEnumHelper.MessageTypeToDBStr(rains[i].MessageType),
-                    CN_RecvDataTime, rains[i].TimeRecieved.ToString(),
-                    CN_DataState, rains[i].BState,
-                    //CN_RainID, rains[i].RainID
-                    CN_StationId, rains[i].StationID,
-                    CN_DataTime, rains[i].TimeCollect.ToString()
-                );
-
+                return true;
             }
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/updateSubcenter";
+            //string url = "http://" + urlPrefix + suffix;
+            string url = "http://127.0.0.1:8088/rain/updateRain";
+            string jsonStr = HttpHelper.ObjectToJson(rains);
+            param["rain"] = "[{\"BState\":2,\"ChannelType\":15,\"DayRain\":4,\"DifferneceRain\":4,\"MessageType\":8,\"PeriodRain\":4,\"RainID\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 11:00:00\",\"TimeRecieved\":\"2019/3/13 12:45:00\",\"TotalRain\":44}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新雨量信息失败");
                 return false;
             }
-            ResetAll();
-
-            for (int i = 0; i < rains.Count; i++)
-            {
-                if (rains[i].TimeCollect.Hour == 8 && rains[i].TimeCollect.Minute + rains[i].TimeCollect.Second == 0)
-                {
-                    //修改当前8点整点的日雨量
-                    CEntityRain result1 = GetLastDayRain_1(rains[i]);
-                    if (result1 != null)
-                    {
-                        rains[i].DayRain = rains[i].TotalRain - result1.TotalRain;
-                        UpdateThisDayRain(rains[i]);
-                    }
-                }
-                if (rains[i].TimeCollect.Minute + rains[i].TimeCollect.Second == 0)
-                {
-                    //修改本条整点的时段雨量
-                    CEntityRain result2 = GetLastSharpRain_1(rains[i]);
-                    if (result2 != null)
-                    {
-                        rains[i].PeriodRain = rains[i].TotalRain - result2.TotalRain;
-                        UpdateThisSharpRain(rains[i]);
-                    }
-                }
-
-                //修改本条数据的差值雨量
-                CEntityRain result3 = GetLastRain_1(rains[i]);
-                if (result3 != null)
-                {
-                    rains[i].DifferneceRain = rains[i].TotalRain - result3.TotalRain;
-                    UpdateThisRain(rains[i]);
-                }
-            }
             return true;
+            //// 除主键外和站点外，其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            ////  int currentBatchCount = 0;
+            //for (int i = 0; i < rains.Count; i++)
+            //{
+            //    //   ++currentBatchCount;
+            //    //第一个修改，下一条最近的数据
+            //    CTF_TableName = "rain" + rains[i].TimeCollect.Year.ToString() + rains[i].TimeCollect.Month.ToString() + (rains[1].TimeCollect.Day > 15 ? "B" : "A");
+            //    sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10},{11}={12},{13}='{14}',{15} ='{16}' where {17}={18} and {19}='{20}';",
+            //        CTF_TableName,
+            //        //  CN_DataTime, DateTimeToDBStr(rains[i].TimeCollect),
+            //        CN_PeriodRain, rains[i].PeriodRain.HasValue ? rains[i].PeriodRain.Value.ToString() : "null",
+            //        CN_TotalRain, rains[i].TotalRain.HasValue ? rains[i].TotalRain.Value.ToString() : "null",
+            //        CN_DifferenceRain, rains[i].DifferneceRain.HasValue ? rains[i].DifferneceRain.Value.ToString() : "null",
+            //        CN_DayRain, rains[i].DayRain.HasValue ? rains[i].DayRain.Value.ToString() : "null",
+            //        CN_TransType, CEnumHelper.ChannelTypeToDBStr(rains[i].ChannelType),
+            //        CN_MsgType, CEnumHelper.MessageTypeToDBStr(rains[i].MessageType),
+            //        CN_RecvDataTime, rains[i].TimeRecieved.ToString(),
+            //        CN_DataState, rains[i].BState,
+            //        //CN_RainID, rains[i].RainID
+            //        CN_StationId, rains[i].StationID,
+            //        CN_DataTime, rains[i].TimeCollect.ToString()
+            //    );
+
+            //}
+            //    if (!this.ExecuteSQLCommand(sql.ToString()))
+            //    {
+            //        return false;
+            //    }
+            //    ResetAll();
+
+            //    for (int i = 0; i < rains.Count; i++)
+            //    {
+            //        if (rains[i].TimeCollect.Hour == 8 && rains[i].TimeCollect.Minute + rains[i].TimeCollect.Second == 0)
+            //        {
+            //            //修改当前8点整点的日雨量
+            //            CEntityRain result1 = GetLastDayRain_1(rains[i]);
+            //            if (result1 != null)
+            //            {
+            //                rains[i].DayRain = rains[i].TotalRain - result1.TotalRain;
+            //                UpdateThisDayRain(rains[i]);
+            //            }
+            //        }
+            //        if (rains[i].TimeCollect.Minute + rains[i].TimeCollect.Second == 0)
+            //        {
+            //            //修改本条整点的时段雨量
+            //            CEntityRain result2 = GetLastSharpRain_1(rains[i]);
+            //            if (result2 != null)
+            //            {
+            //                rains[i].PeriodRain = rains[i].TotalRain - result2.TotalRain;
+            //                UpdateThisSharpRain(rains[i]);
+            //            }
+            //        }
+
+            //        //修改本条数据的差值雨量
+            //        CEntityRain result3 = GetLastRain_1(rains[i]);
+            //        if (result3 != null)
+            //        {
+            //            rains[i].DifferneceRain = rains[i].TotalRain - result3.TotalRain;
+            //            UpdateThisRain(rains[i]);
+            //        }
+            //    }
+            //    return true;
         }
         public bool UpdateOtherRows_DataModify(List<CEntityRain> rains)
         {

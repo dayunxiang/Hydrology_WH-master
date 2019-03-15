@@ -14,8 +14,8 @@ namespace Hydrology.DBManager.DB.SQLServer
     {
         #region 静态常量
         private const string CT_EntityName = "CEntityVoltage";   //  数据库表Voltage实体类
-       // public static readonly string CT_TableName = "voltage";      //数据库中电压表的名字
-        //public static readonly string CT_TableName = "voltage" + DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + (DateTime.Now.Day < 15 ? "A" : "B"); //数据库中电压表的名字
+                                                                 // public static readonly string CT_TableName = "voltage";      //数据库中电压表的名字
+                                                                 //public static readonly string CT_TableName = "voltage" + DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + (DateTime.Now.Day < 15 ? "A" : "B"); //数据库中电压表的名字
         public static string CT_TableName
         {
             get { return "voltage" + DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + (DateTime.Now.Day < 15 ? "A" : "B"); }
@@ -189,7 +189,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
             {
                 // 如果超过最大值，写入数据库
-               // NewTask(() => { AddDataToDB(); });
+                // NewTask(() => { AddDataToDB(); });
                 NewTask(() => { InsertSqlBulk(m_tableDataAdded); });
             }
             else
@@ -202,109 +202,200 @@ namespace Hydrology.DBManager.DB.SQLServer
 
         public void AddNewRows_1(List<CEntityVoltage> voltages)
         {
-            // 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
-            m_mutexDataTable.WaitOne(); //等待互斥量
-            foreach (CEntityVoltage voltage in voltages)
+            if (voltages.Count <= 0)
             {
-                DataRow row = m_tableDataAdded.NewRow();
-                row[CN_StationId] = voltage.StationID;
-                row[CN_DataTime] = voltage.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-                row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(voltage.MessageType);
-                row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(voltage.ChannelType);
-                row[CN_RecvDataTime] = voltage.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
-                row[CN_Voltage] = voltage.Voltage;
-                row[CN_Voltage] = voltage.state;
-                m_tableDataAdded.Rows.Add(row);
-                // 判断是否需要创建新分区
-                //CSQLPartitionMgr.Instance.MaintainVoltage(voltage.TimeCollect);
             }
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string url = "http://127.0.0.1:8088/voltage/insertVoltage";
+            string jsonStr = HttpHelper.ObjectToJson(voltages);
+            param["voltage"] = "[{\"ChannelType\":6,\"MessageType\":1,\"StationID\":\"0229\",\"TimeCollect\":\"2019-3-13 18:00:00\",\"TimeRecieved\":\"2019-3-13 18:15:00\",\"Voltage\":4,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("添加电压信息失败");
+            }
+            //// 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
+            //m_mutexDataTable.WaitOne(); //等待互斥量
+            //foreach (CEntityVoltage voltage in voltages)
+            //{
+            //    DataRow row = m_tableDataAdded.NewRow();
+            //    row[CN_StationId] = voltage.StationID;
+            //    row[CN_DataTime] = voltage.TimeCollect.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+            //    row[CN_MsgType] = CEnumHelper.MessageTypeToDBStr(voltage.MessageType);
+            //    row[CN_TransType] = CEnumHelper.ChannelTypeToDBStr(voltage.ChannelType);
+            //    row[CN_RecvDataTime] = voltage.TimeRecieved.ToString(CDBParams.GetInstance().DBDateTimeFormat);
+            //    row[CN_Voltage] = voltage.Voltage;
+            //    row[CN_Voltage] = voltage.state;
+            //    m_tableDataAdded.Rows.Add(row);
+            //    // 判断是否需要创建新分区
+            //    //CSQLPartitionMgr.Instance.MaintainVoltage(voltage.TimeCollect);
+            //}
 
-            // 如果超过最大值，写入数据库
-            NewTask(() => { AddDataToDB(); });
+            //// 如果超过最大值，写入数据库
+            //NewTask(() => { AddDataToDB(); });
 
-            m_mutexDataTable.ReleaseMutex();
+            //m_mutexDataTable.ReleaseMutex();
         }
 
         public bool DeleteRows(List<String> voltages_StationId, List<String> voltages_StationDate)
         {
-            // 删除某条雨量记录
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
+            if (voltages_StationId.Count <= 0)
+            {
+                return true;
+            }
+            List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
             for (int i = 0; i < voltages_StationId.Count; i++)
             {
-                ++currentBatchCount;
-                CTF_TableName = "voltage" + DateTime.Parse(voltages_StationDate[i]).Year.ToString() + DateTime.Parse(voltages_StationDate[i]).Month.ToString() + (DateTime.Parse(voltages_StationDate[i]).Day < 15 ? "A" : "B");
-                sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
-                    CTF_TableName,
-                    CN_StationId, voltages_StationId[i].ToString(),
-                    CN_DataTime, voltages_StationDate[i].ToString()
-                    // CN_VoltageID, voltages[i].ToString()
-                );
-                if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+                voltageList.Add(new CEntityVoltage()
                 {
-                    // 更新数据库
-                    if (!this.ExecuteSQLCommand(sql.ToString()))
-                    {
-                        // 保存失败
-                        return false;
-                    }
-                    sql.Clear(); //清除以前的所有命令
-                    currentBatchCount = 0;
-                }
+                    StationID = voltages_StationId[i],
+                    TimeCollect = Convert.ToDateTime(voltages_StationDate[i]),
+                    TimeRecieved = Convert.ToDateTime("2019/3/13 15:00:00")
+                });
             }
-            // 如何考虑线程同异步
-            if (!ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
+            string url = "http://127.0.0.1:8088/voltage/deleteVoltage";
+            string jsonStr = HttpHelper.ObjectToJson(voltageList);
+            param["voltage"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"0229\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 15:00:00\",\"Voltage\":null,\"VoltageID\":0,\"state\":0,\"type\":null}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("删除电压信息失败");
                 return false;
             }
-            ResetAll();
             return true;
+            //// 删除某条雨量记录
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < voltages_StationId.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    CTF_TableName = "voltage" + DateTime.Parse(voltages_StationDate[i]).Year.ToString() + DateTime.Parse(voltages_StationDate[i]).Month.ToString() + (DateTime.Parse(voltages_StationDate[i]).Day < 15 ? "A" : "B");
+            //    sql.AppendFormat("delete from {0} where {1}={2} and {3}='{4}';",
+            //        CTF_TableName,
+            //        CN_StationId, voltages_StationId[i].ToString(),
+            //        CN_DataTime, voltages_StationDate[i].ToString()
+            //        // CN_VoltageID, voltages[i].ToString()
+            //    );
+            //    if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    {
+            //        // 更新数据库
+            //        if (!this.ExecuteSQLCommand(sql.ToString()))
+            //        {
+            //            // 保存失败
+            //            return false;
+            //        }
+            //        sql.Clear(); //清除以前的所有命令
+            //        currentBatchCount = 0;
+            //    }
+            //}
+            //// 如何考虑线程同异步
+            //if (!ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //ResetAll();
+            //return true;
         }
 
         public bool UpdateRows(List<CEntityVoltage> voltages)
         {
-            // 除主键外和站点外，其余信息随意修改
-            StringBuilder sql = new StringBuilder();
-            int currentBatchCount = 0;
-            for (int i = 0; i < voltages.Count; i++)
+            if (voltages.Count <= 0)
             {
-                ++currentBatchCount;
-                CTF_TableName = "voltage" + voltages[i].TimeCollect.Year.ToString() + voltages[i].TimeCollect.Month.ToString() + (voltages[i].TimeCollect.Day < 15 ? "A" : "B");
-                sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10} where {11}={12} and {13}='{14}';",
-                    CTF_TableName,
-                    CN_Voltage, voltages[i].Voltage,
-                    CN_TransType, CEnumHelper.ChannelTypeToDBStr(voltages[i].ChannelType),
-                    CN_MsgType, CEnumHelper.MessageTypeToDBStr(voltages[i].MessageType),
-                    CN_State, voltages[i].state,
-                    CN_RecvDataTime, DateTimeToDBStr(voltages[i].TimeRecieved),
-                    CN_StationId, voltages[i].StationID,
-                    CN_DataTime, voltages[i].TimeCollect.ToString()
-                    //    CN_VoltageID, voltages[i].VoltageID
-                );
-                //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
-                //{
-                //    // 更新数据库
-                //    if (!this.ExecuteSQLCommand(sql.ToString()))
-                //    {
-                //        // 保存失败
-                //        return false;
-                //    }
-                //    sql.Clear(); //清除以前的所有命令
-                //    currentBatchCount = 0;
-                //}
+                return true;
             }
-            // 更新数据库
-            if (!this.ExecuteSQLCommand(sql.ToString()))
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "/subcenter/updateSubcenter";
+            //string url = "http://" + urlPrefix + suffix;
+            string url = "http://127.0.0.1:8088/voltage/updateVoltage";
+            string jsonStr = HttpHelper.ObjectToJson(voltages);
+            param["voltage"] = "[{\"ChannelType\":16,\"MessageType\":2,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 18:15:44\",\"Voltage\":44,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            try
             {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("更新电压信息失败");
                 return false;
             }
-            sql.Clear(); //清除以前的所有命令
-            ResetAll();
             return true;
+            //// 除主键外和站点外，其余信息随意修改
+            //StringBuilder sql = new StringBuilder();
+            //int currentBatchCount = 0;
+            //for (int i = 0; i < voltages.Count; i++)
+            //{
+            //    ++currentBatchCount;
+            //    CTF_TableName = "voltage" + voltages[i].TimeCollect.Year.ToString() + voltages[i].TimeCollect.Month.ToString() + (voltages[i].TimeCollect.Day < 15 ? "A" : "B");
+            //    sql.AppendFormat("update {0} set {1}={2},{3}={4},{5}={6},{7}={8},{9}={10} where {11}={12} and {13}='{14}';",
+            //        CTF_TableName,
+            //        CN_Voltage, voltages[i].Voltage,
+            //        CN_TransType, CEnumHelper.ChannelTypeToDBStr(voltages[i].ChannelType),
+            //        CN_MsgType, CEnumHelper.MessageTypeToDBStr(voltages[i].MessageType),
+            //        CN_State, voltages[i].state,
+            //        CN_RecvDataTime, DateTimeToDBStr(voltages[i].TimeRecieved),
+            //        CN_StationId, voltages[i].StationID,
+            //        CN_DataTime, voltages[i].TimeCollect.ToString()
+            //        //    CN_VoltageID, voltages[i].VoltageID
+            //    );
+            //    //if (currentBatchCount >= CDBParams.GetInstance().UpdateBufferMax)
+            //    //{
+            //    //    // 更新数据库
+            //    //    if (!this.ExecuteSQLCommand(sql.ToString()))
+            //    //    {
+            //    //        // 保存失败
+            //    //        return false;
+            //    //    }
+            //    //    sql.Clear(); //清除以前的所有命令
+            //    //    currentBatchCount = 0;
+            //    //}
+            //}
+            //// 更新数据库
+            //if (!this.ExecuteSQLCommand(sql.ToString()))
+            //{
+            //    return false;
+            //}
+            //sql.Clear(); //清除以前的所有命令
+            //ResetAll();
+            //return true;
         }
 
         public void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
+            ////传递得参数
+            //Dictionary<string, object> param = new Dictionary<string, object>();
+            ////TODO添加datatime转string timeStart timeEnd
+
+            ////查询条件
+            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            //paramInner["stationid"] = stationId;
+            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["strttime"] = timeStart.ToString();
+            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            //paramInner["endtime"] = timeEnd.ToString();
+            ////返回结果
+            //List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
+            ////string suffix = "/subcenter/getSubcenter";
+            //string url = "http://127.0.0.1:8088/voltage/getVoltage";
+            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            //param["voltage"] = jsonStr;
+            //try
+            //{
+            //    string resultJson = HttpHelper.Post(url, param);
+            //    voltageList = (List<CEntityVoltage>)HttpHelper.JsonToObject(resultJson, new List<CEntityVoltage>());
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.WriteLine("查询电压信息失败");
+            //    throw e;
+            //}
             // 设置查询条件
             if (null == m_strStaionId)
             {
@@ -661,14 +752,17 @@ namespace Hydrology.DBManager.DB.SQLServer
                 {
                     voltage.Voltage = -9999;
                 }
-                if (table.Rows[startRow][CN_State].ToString()!=""){
+                if (table.Rows[startRow][CN_State].ToString() != "")
+                {
                     try
                     {
                         voltage.state = int.Parse(table.Rows[startRow][CN_State].ToString());
                     }
                     catch (Exception ex) { }
-                }else{
-                      voltage.state=1;
+                }
+                else
+                {
+                    voltage.state = 1;
                 }
                 voltage.TimeRecieved = DateTime.Parse(table.Rows[startRow][CN_RecvDataTime].ToString());
                 voltage.ChannelType = CEnumHelper.DBStrToChannelType(table.Rows[startRow][CN_TransType].ToString());
@@ -694,7 +788,7 @@ namespace Hydrology.DBManager.DB.SQLServer
                 string sql = "select * from " + CF_TableName + " where stationid = " + stationID + " and convert(VARCHAR, " + CN_DataTime + ", 120) LIKE '%00:00%' and datatime between '" + startTime + "' and '" + endTime + "'and messageType = 8;";
                 SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
                 DataTable dataTableTmp = new DataTable();
-                adapter.Fill(dataTableTmp); 
+                adapter.Fill(dataTableTmp);
                 for (int i = 0; i < dataTableTmp.Rows.Count; ++i)
                 {
                     CEntityVoltage res = new CEntityVoltage();
@@ -812,7 +906,7 @@ namespace Hydrology.DBManager.DB.SQLServer
 
 
             }
-                return true;
+            return true;
         }
 
     }
