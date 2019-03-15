@@ -101,8 +101,9 @@ namespace Hydrology
                 //bool CDBDataMgrflag = CDBDataMgr.Instance.Init();
                 //bool CDBSoilDataMgrflag = CDBSoilDataMgr.Instance.Init();
                 //if(!CDBDataMgrflag || !CDBSoilDataMgrflag)
-                if (!CDBDataMgr.Instance.Init() || (!CDBSoilDataMgr.Instance.Init()))
-                {
+                //if (!CDBDataMgr.Instance.Init() || (!CDBSoilDataMgr.Instance.Init()))
+                 if (!CDBDataMgr.Instance.Init())
+                    {
                     var msgboxResult = MessageBox.Show("数据库配置错误,请重新配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     if (DialogResult.OK == msgboxResult)
                     {

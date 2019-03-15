@@ -53,7 +53,7 @@ namespace Hydrology.Forms
             {
                 m_listSubCenter = CDBDataMgr.Instance.GetAllSubCenter();
                 m_listStation = CDBDataMgr.GetInstance().GetAllStation();
-                m_listSoilStation = CDBSoilDataMgr.GetInstance().GetAllSoilStation();
+                //m_listSoilStation = CDBSoilDataMgr.GetInstance().GetAllSoilStation();
                 m_listStationCombination = new List<CEntityStation>(m_listStation.ToArray()); //可以的啦
             }
             catch (Exception ex) { }
@@ -332,15 +332,15 @@ namespace Hydrology.Forms
                         return false;
                     }
                 }
-                for (int i = 0; i < m_listSoilStation.Count; ++i)
-                {
-                    if (m_listSoilStation[i].StationID.Trim() == stationId)
-                    {
-                        MessageBox.Show(string.Format("水情测站站号不能与墒情测站编号一样！已存在墒情测站{0}",
-                        stationId));
-                        return false;
-                    }
-                }
+                //for (int i = 0; i < m_listSoilStation.Count; ++i)
+                //{
+                //    if (m_listSoilStation[i].StationID.Trim() == stationId)
+                //    {
+                //        MessageBox.Show(string.Format("水情测站站号不能与墒情测站编号一样！已存在墒情测站{0}",
+                //        stationId));
+                //        return false;
+                //    }
+                //}
                 if (comb_MainRoad.Text.ToString() == "SX-GPRS" || comb_PrepareRoad.Text.ToString() == "SX-GPRS")
                 {
                     string gprs = textBox_GPRS.Text.Trim();
@@ -373,16 +373,16 @@ namespace Hydrology.Forms
                             return false;
                         }
                     }
-                    for (int i = 0; i < m_listSoilStation.Count; ++i)
-                    {
-                        if (m_listSoilStation[i].GPRS.Trim() == gprs)
-                        {
-                            MessageBox.Show(string.Format("水情测站Gprs不能重复！与墒情站{0} gprs号码一样 ",
-                           m_listSoilStation[i].StationID.Trim()));
-                            return false;
-                        }
+                    //for (int i = 0; i < m_listSoilStation.Count; ++i)
+                    //{
+                    //    if (m_listSoilStation[i].GPRS.Trim() == gprs)
+                    //    {
+                    //        MessageBox.Show(string.Format("水情测站Gprs不能重复！与墒情站{0} gprs号码一样 ",
+                    //       m_listSoilStation[i].StationID.Trim()));
+                    //        return false;
+                    //    }
 
-                    }
+                    //}
                 }
 
                 if (System.Text.Encoding.Default.GetByteCount(stationId) > 10)

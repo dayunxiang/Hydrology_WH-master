@@ -120,7 +120,8 @@ namespace Hydrology.Forms
         {
             this.m_listSubcenters = CDBDataMgr.Instance.GetAllSubCenter();
             this.m_listStations = CDBDataMgr.Instance.GetAllStation();
-            this.m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            //this.m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            this.m_listSoilStations = new List<CEntitySoilStation>();
         }
         //状态信息
         private void InitDtuDgv()
@@ -129,7 +130,7 @@ namespace Hydrology.Forms
             this.panel5.Controls.Remove(this.dgvDTUList);
             dgvDTUList = new CDataGridViewGPRSNew();
             dgvDTUList.RefreshGPRSInfo(m_listStations);
-            dgvDTUList.RefreshGPRSInfoSoil(m_listSoilStations);
+            //dgvDTUList.RefreshGPRSInfoSoil(m_listSoilStations);
             dgvDTUList.AllowUserToAddRows = false;
             dgvDTUList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.None;
             dgvDTUList.Dock = DockStyle.Fill;
@@ -151,13 +152,13 @@ namespace Hydrology.Forms
                     dgvDTUList.m_totalGprsCount += 1;
                 }
             }
-            foreach (var station in m_listSoilStations)
-            {
-                if (!string.IsNullOrEmpty(station.GPRS))
-                {
-                    dgvDTUList.m_totalGprsCount += 1;
-                }
-            }
+            //foreach (var station in m_listSoilStations)
+            //{
+            //    if (!string.IsNullOrEmpty(station.GPRS))
+            //    {
+            //        dgvDTUList.m_totalGprsCount += 1;
+            //    }
+            //}
 
             this.lblToolTip.Text = string.Format("GPRS站点在线状态统计  在线:{0}个，离线:{1}个，共:{2}个,上次刷新时间{3}.", 0, dgvDTUList.TotalGprsCount, dgvDTUList.TotalGprsCount, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 

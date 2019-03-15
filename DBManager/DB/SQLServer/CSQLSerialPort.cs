@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLSerialPort : CSQLBase, ISerialPortProxy
     {
         #region STATIC_MEMBER
+        private string urlPrefix = "127.0.0.1:8088";
         private const string CT_EntityName = "CEntitySerialPort";   //  串口配置表对应的实体类名称
         private static readonly string CT_TableName = "SerialPort"; //数据库串口配置表的名字
         private static readonly string CN_PortNumber = "PortNumber";    //串口号，1~16，主键
@@ -54,6 +55,11 @@ namespace Hydrology.DBManager.DB.SQLServer
 
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_SerialPort;
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         // 添加新列
@@ -344,56 +350,75 @@ namespace Hydrology.DBManager.DB.SQLServer
         /// </summary>
         public List<CEntitySerialPort> QueryAll()
         {
+            //返回结果
             var result = new List<CEntitySerialPort>();
-            var sqlConn = CDBManager.GetInstacne().GetConnection();
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["portNumber"] = "";
+            string suffix = "/serialport/getSerialport";
+            string url = "http://" + urlPrefix + suffix;
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["serialport"] = jsonStr;
             try
             {
-                m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
-                m_mutexDataTable.WaitOne();         // 获取内存表的访问权
-                sqlConn.Open();                     // 建立数据库连接
-
-                String sqlStr = GetQuerySQL();
-
-                SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
-
-                SqlDataReader reader = sqlCmd.ExecuteReader();
-
-                Debug.Assert(reader.FieldCount == CN_FIELD_COUNT, CT_TableName + "表与类" + CT_EntityName + "中定义字段不符合");
-
-                //  处理查询结果
-                while (reader.Read())
-                {
-                    try
-                    {
-                        var port = new CEntitySerialPort();
-
-                        port.PortNumber = (Int32)reader[CN_PortNumber];
-                        port.TransType = CEnumHelper.DBStrToSerialTransType((String)reader[CN_TransType]);
-                        port.Baudrate = (Int32)reader[CN_Baudrate];
-                        port.DataBit = (Int32)reader[CN_Databit];
-                        port.StopBit = (Int32)reader[CN_Stopbit];
-                        port.ParityType = CEnumHelper.DBCharToPortParityType(((String)reader[CN_Parity])[0]);
-                        port.Stream = CEnumHelper.DBStrToSerialPortStreamType(reader[CN_Stream].ToString());
-                        port.Break = (Boolean)reader[CN_Break];
-                        port.SwitchSatus = (Boolean)reader[CN_Open];
-                        result.Add(port);
-                    }
-                    catch(Exception exp)
-                    {
-                        Debug.WriteLine(exp.Message);
-                    }
-                }
+                string resultJson = HttpHelper.Post(url, param);
+                result = (List<CEntitySerialPort>)HttpHelper.JsonToObject(resultJson, new List<CEntitySerialPort>());
             }
-            catch (Exception exp)
+            catch (Exception e)
             {
-                throw exp;
+                Debug.WriteLine("查询");
+                throw e;
             }
-            finally
-            {
-                sqlConn.Close();                    //  关闭数据库连接
-                m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
-                m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
-            }
+            //var sqlConn = CDBManager.GetInstacne().GetConnection();
+            //try
+            //{
+            //    m_mutexWriteToDB.WaitOne();         // 取对数据库的唯一访问权
+            //    m_mutexDataTable.WaitOne();         // 获取内存表的访问权
+            //    sqlConn.Open();                     // 建立数据库连接
+
+            //    String sqlStr = GetQuerySQL();
+
+            //    SqlCommand sqlCmd = new SqlCommand(sqlStr, sqlConn);
+
+            //    SqlDataReader reader = sqlCmd.ExecuteReader();
+
+            //    Debug.Assert(reader.FieldCount == CN_FIELD_COUNT, CT_TableName + "表与类" + CT_EntityName + "中定义字段不符合");
+
+            //    //  处理查询结果
+            //    while (reader.Read())
+            //    {
+            //        try
+            //        {
+            //            var port = new CEntitySerialPort();
+
+            //            port.PortNumber = (Int32)reader[CN_PortNumber];
+            //            port.TransType = CEnumHelper.DBStrToSerialTransType((String)reader[CN_TransType]);
+            //            port.Baudrate = (Int32)reader[CN_Baudrate];
+            //            port.DataBit = (Int32)reader[CN_Databit];
+            //            port.StopBit = (Int32)reader[CN_Stopbit];
+            //            port.ParityType = CEnumHelper.DBCharToPortParityType(((String)reader[CN_Parity])[0]);
+            //            port.Stream = CEnumHelper.DBStrToSerialPortStreamType(reader[CN_Stream].ToString());
+            //            port.Break = (Boolean)reader[CN_Break];
+            //            port.SwitchSatus = (Boolean)reader[CN_Open];
+            //            result.Add(port);
+            //        }
+            //        catch(Exception exp)
+            //        {
+            //            Debug.WriteLine(exp.Message);
+            //        }
+            //    }
+            //}
+            //catch (Exception exp)
+            //{
+            //    throw exp;
+            //}
+            //finally
+            //{
+            //    sqlConn.Close();                    //  关闭数据库连接
+            //    m_mutexDataTable.ReleaseMutex();    //  释放内存表的访问权
+            //    m_mutexWriteToDB.ReleaseMutex();    //  释放数据库的访问权
+            //}
             return result;
         }
         private String GetQuerySQL()

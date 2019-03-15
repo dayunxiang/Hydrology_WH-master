@@ -144,9 +144,10 @@ namespace Hydrology.CControls
         {
             var m_listStation = CDBDataMgr.GetInstance().GetAllStation();
             var m_listSubCenter = CDBDataMgr.GetInstance().GetAllSubCenter();
-            var m_listSoilStation = CDBSoilDataMgr.GetInstance().GetAllSoilStation();
+            //var m_listSoilStation = CDBSoilDataMgr.GetInstance().GetAllSoilStation();
+            var m_listSoilStation = new List<CEntitySoilStation>();
 
-            //   var dics = new Dictionary<CEntitySubCenter, IList<CEntityStation>>();
+            //var dics = new Dictionary<CEntitySubCenter, IList<CEntityStation>>();
             var dics = new Dictionary<CEntitySubCenter, IList<Object>>();
             var dicsSoil = new Dictionary<CEntitySubCenter, IList<CEntitySoilStation>>();
 
@@ -156,7 +157,7 @@ namespace Hydrology.CControls
                 int subcenterId = center.SubCenterID;
 
                 var listStations = new List<Object>();
-                var listSoilStations = new List<Object>();
+                //var listSoilStations = new List<Object>();
                 foreach (var station in m_listStation)
                 {
                     if (station.SubCenterID.HasValue && station.SubCenterID == subcenterId)
@@ -166,13 +167,13 @@ namespace Hydrology.CControls
                     }
                 }
 
-                foreach (var soilstation in m_listSoilStation)
-                {
-                    if (soilstation.SubCenterID.HasValue && soilstation.SubCenterID == subcenterId)
-                    {
-                        listStations.Add(soilstation);
-                    }
-                }
+                //foreach (var soilstation in m_listSoilStation)
+                //{
+                //    if (soilstation.SubCenterID.HasValue && soilstation.SubCenterID == subcenterId)
+                //    {
+                //        listStations.Add(soilstation);
+                //    }
+                //}
 
                 if (!listSubcenters.Contains(subcenterId))
                 {

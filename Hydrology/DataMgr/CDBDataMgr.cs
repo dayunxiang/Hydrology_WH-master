@@ -148,10 +148,10 @@ namespace Hydrology.DataMgr
             udTimer.Enabled = true;
             udTimer.Start();
             // 如果连接失败，则返回false
-            if (!CDBManager.Instance.TryToConnection())
-            {
-                return false;
-            }
+            //if (!CDBManager.Instance.TryToConnection())
+            //{
+            //    return false;
+            //}
             // 此处应该考虑根据配置连接不同的数据库，嘿嘿，从长计议，工厂模式啥啥啥的都可以
             m_proxyStation = new CSQLStation();
             m_proxySubCenter = new CSQLSubCenter();
@@ -214,7 +214,7 @@ namespace Hydrology.DataMgr
             }
 
             resetTxt();
-            CreateTable();
+            //CreateTable();
             ReadRTDXml();
             // 初始化上次雨量记录
             InitStationRainRecord();
