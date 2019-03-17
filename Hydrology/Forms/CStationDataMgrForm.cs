@@ -91,7 +91,7 @@ namespace Hydrology.Forms
                 btnNewRecord.Visible = true;
                 btnApply.Visible = true;
 
-                cmbQueryInfo.Items.Add(CS_CMB_SoilData);
+                //cmbQueryInfo.Items.Add(CS_CMB_SoilData);
 
                 // 将控件启用编辑状态
                 m_dgvRain.Editable = true;
@@ -317,31 +317,25 @@ namespace Hydrology.Forms
                 this.cmbStation.m_listBoxStation.Items.Clear();
                 // 根据分中心查找测站
                 m_listStations = CDBDataMgr.Instance.GetAllStation();
-                m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
-                //   m_dgvStatioin.SetSubCenterName(null); //所有分中
                 for (int i = 0; i < m_listStations.Count; ++i)
                 {
                     this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listStations[i].StationID, m_listStations[i].StationName));
                 }
-                for (int i = 0; i < m_listSoilStations.Count; ++i)
-                {
-                    this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listSoilStations[i].StationID, m_listSoilStations[i].StationName));
-                }
+                //for (int i = 0; i < m_listSoilStations.Count; ++i)
+                //{
+                //    this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listSoilStations[i].StationID, m_listSoilStations[i].StationName));
+                //}
                 //    this.cmbStation.Text = this.cmbStation.m_listBoxStation.Items[0].ToString();
             }
             else
             {
                 string subcentername = cmb_SubCenter.Text;
-                //  m_dgvStatioin.SetSubCenterName(subcentername);
-                //this.panelLeft.Controls.Remove(this.cmbStation);
-                //  this.cmbStation = new CStationComboBox();
-                // this.cmbStation.SetSubcenter(subcentername);
                 this.cmbStation.m_listBoxStation.Items.Clear();
 
                 // 根据分中心查找测站
                 //List<CEntityStation> listAllStation = CDBDataMgr.Instance.GetAllStation();
                 m_listStations = CDBDataMgr.Instance.GetAllStation();
-                m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+                //m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
                 CEntitySubCenter subcenter = CDBDataMgr.Instance.GetSubCenterByName(subcentername);
                 if (null != subcenter)
                 {
@@ -354,13 +348,13 @@ namespace Hydrology.Forms
                             this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listStations[i].StationID, m_listStations[i].StationName));
                         }
                     }
-                    for (int i = 0; i < m_listSoilStations.Count; ++i)
-                    {
-                        if (m_listSoilStations[i].SubCenterID == subcenter.SubCenterID)
-                        {
-                            this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listSoilStations[i].StationID, m_listSoilStations[i].StationName));
-                        }
-                    }
+                    //for (int i = 0; i < m_listSoilStations.Count; ++i)
+                    //{
+                    //    if (m_listSoilStations[i].SubCenterID == subcenter.SubCenterID)
+                    //    {
+                    //        this.cmbStation.m_listBoxStation.Items.Add(string.Format("({0,-4}|{1})", m_listSoilStations[i].StationID, m_listSoilStations[i].StationName));
+                    //    }
+                    //}
                     //      this.cmbStation.Text = this.cmbStation.m_listBoxStation.Items[0].ToString();
                 }
                 else
@@ -391,7 +385,7 @@ namespace Hydrology.Forms
             List<CEntitySubCenter> listSubCenter = CDBDataMgr.Instance.GetAllSubCenter();
 
             m_listStations = CDBDataMgr.Instance.GetAllStation();
-            m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            //m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
             cmb_SubCenter.Items.Add(CS_All_Station);
             for (int i = 0; i < listSubCenter.Count; ++i)
             {

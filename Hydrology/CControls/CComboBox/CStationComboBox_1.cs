@@ -145,19 +145,19 @@ namespace Hydrology.CControls
                     break;
                 }
             }
-            for (int i = 0; i < m_listSoilStations.Count; ++i)
-            {
-                if (stationId == m_listSoilStations[i].StationID)
-                {
-                    m_currentStation = m_listSoilStations[i];
-                    // 发消息
-                    if (StationSelected != null)
-                    {
-                        StationSelected.Invoke(this, new CEventSingleArgs<Object>(m_currentStation));
-                    }
-                    break;
-                }
-            }
+            //for (int i = 0; i < m_listSoilStations.Count; ++i)
+            //{
+            //    if (stationId == m_listSoilStations[i].StationID)
+            //    {
+            //        m_currentStation = m_listSoilStations[i];
+            //        // 发消息
+            //        if (StationSelected != null)
+            //        {
+            //            StationSelected.Invoke(this, new CEventSingleArgs<Object>(m_currentStation));
+            //        }
+            //        break;
+            //    }
+            //}
             this.TextChanged += new EventHandler(cmbStation_TextChanged);
             HideListBox();
         }
@@ -212,15 +212,15 @@ namespace Hydrology.CControls
                     }
                 }
 
-                foreach (CEntitySoilStation station in m_listSoilStations)
-                {
-                    string tmp = GetDisplaySoilStationName(station);
-                    if (tmp.Contains(filter))
-                    {
-                        m_listBoxStation.Items.Add(tmp);
-                        lastStation = station;
-                    }
-                }
+                //foreach (CEntitySoilStation station in m_listSoilStations)
+                //{
+                //    string tmp = GetDisplaySoilStationName(station);
+                //    if (tmp.Contains(filter))
+                //    {
+                //        m_listBoxStation.Items.Add(tmp);
+                //        lastStation = station;
+                //    }
+                //}
 
                 //this.SelectionStart = this.Text.Length;
                 //// 如果只有一个的话，就不需要显示下拉列表了
@@ -255,15 +255,15 @@ namespace Hydrology.CControls
                         m_listBoxStation.Items.Add(tmp);
                     }
 
-                    foreach (CEntitySoilStation station in m_listSoilStations)
-                    {
-                        string tmp = GetDisplaySoilStationName(station);
-                        if (tmp.Contains(filter))
-                        {
-                            m_listBoxStation.Items.Add(tmp);
-                            lastStation = station;
-                        }
-                    }
+                    //foreach (CEntitySoilStation station in m_listSoilStations)
+                    //{
+                    //    string tmp = GetDisplaySoilStationName(station);
+                    //    if (tmp.Contains(filter))
+                    //    {
+                    //        m_listBoxStation.Items.Add(tmp);
+                    //        lastStation = station;
+                    //    }
+                    //}
 
                     this.TextChanged += new EventHandler(cmbStation_TextChanged);
                     // 发消息，当前没有选中站点
@@ -312,7 +312,7 @@ namespace Hydrology.CControls
                 m_listStations = new List<CEntityStation>();
 
             var lists = CDBDataMgr.Instance.GetAllStation();
-            m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            //m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
             foreach (var station in lists)
             {
                 if ((station.StationType == EStationType.EHydrology
@@ -324,10 +324,10 @@ namespace Hydrology.CControls
                     m_listBoxStation.Items.Add(GetDisplayStationName(station));
                 }
             }
-            foreach (CEntitySoilStation station in m_listSoilStations)
-            {
-                m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
-            }
+            //foreach (CEntitySoilStation station in m_listSoilStations)
+            //{
+            //    m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
+            //}
             // 绑定消息
             //this.TextChanged += cmbStation_TextChanged;
         }
@@ -336,16 +336,16 @@ namespace Hydrology.CControls
         {
 
             m_listStations = CDBDataMgr.Instance.GetAllStation();
-            m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStationData();
+            //m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStationData();
             foreach (CEntityStation station in m_listStations)
             { 
                 m_listBoxStation.Items.Add(GetDisplayStationName(station));
             }
 
-            foreach (CEntitySoilStation station in m_listSoilStations)
-            {
-                m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
-            }
+            //foreach (CEntitySoilStation station in m_listSoilStations)
+            //{
+            //    m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
+            //}
             // 绑定消息
             this.TextChanged += cmbStation_TextChanged;
         }
@@ -354,16 +354,16 @@ namespace Hydrology.CControls
         {
 
             m_listStations = CDBDataMgr.Instance.GetAllStation();
-            m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            //m_listSoilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
       
             foreach (CEntityStation station in m_listStations)
             {
                 m_listBoxStation.Items.Add(GetDisplayStationName(station));
             }
-            foreach (CEntitySoilStation station in m_listSoilStations)
-            {
-                m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
-            }
+            //foreach (CEntitySoilStation station in m_listSoilStations)
+            //{
+            //    m_listBoxStation.Items.Add(GetDisplaySoilStationName(station));
+            //}
             // 绑定消息
             this.TextChanged += cmbStation_TextChanged;
         }

@@ -389,6 +389,7 @@
             this.I_searchDebug.Size = new System.Drawing.Size(189, 22);
             this.I_searchDebug.Tag = "调试信息查询";
             this.I_searchDebug.Text = "调试信息查询...";
+            this.I_searchDebug.Visible = false;
             // 
             // toolsMenu
             // 

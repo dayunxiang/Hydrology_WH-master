@@ -129,6 +129,7 @@ namespace Hydrology.DBManager
         public static object JsonToObject(string jsonString, object obj)
         {
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
+
             MemoryStream mStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString));
             return serializer.ReadObject(mStream);
         }
@@ -147,6 +148,31 @@ namespace Hydrology.DBManager
             stream.Position = 0;
             stream.Read(dataBytes, 0, (int)stream.Length);
             return Encoding.UTF8.GetString(dataBytes);
+        }
+        /// <summary>
+        /// 将"yyyy-MM-dd HH:mm:ss"格式的字符串转为"//Date(1294499956278+0800)//"格式  
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        public static string JsonDeserialize(string jsonString)
+        {
+            string p = @"(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})";
+            System.Text.RegularExpressions.MatchEvaluator matchEvaluator = new System.Text.RegularExpressions.MatchEvaluator(ConvertDateStringToJsonDate);
+            System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex(p);
+            string c = reg.Replace(jsonString, matchEvaluator);
+            return c;
+        }
+        /// <summary>  
+        /// 将时间字符串转为Json时间  
+        /// </summary>  
+        private static string ConvertDateStringToJsonDate(System.Text.RegularExpressions.Match m)
+        {
+            string result = string.Empty;
+            DateTime dt = DateTime.Parse(m.Groups[0].Value);
+            dt = dt.ToUniversalTime();
+            TimeSpan ts = dt - DateTime.Parse("1970-01-01");
+            result = string.Format("\\/Date({0}+0800)\\/", ts.TotalMilliseconds);
+            return result;
         }
     }
 }

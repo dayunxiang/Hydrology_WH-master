@@ -457,19 +457,19 @@ namespace Hydrology.Forms
                         }
                     }
 
-                    foreach (var station in m_listSoilStations)
-                    {
-                        if (!string.IsNullOrEmpty(station.GPRS))
-                        {
-                            dgvDTUList.m_totalGprsCount += 1;
-                        }
-                    }
+                    //foreach (var station in m_listSoilStations)
+                    //{
+                    //    if (!string.IsNullOrEmpty(station.GPRS))
+                    //    {
+                    //        dgvDTUList.m_totalGprsCount += 1;
+                    //    }
+                    //}
 
                     //  更新已经上线的GPRS号码
                     foreach (var dtu in dtuList)
                     {
                         string stationId = dtu.m_modemId.ToString();
-                        for(int i = 10; i > stationId.Length; i--)
+                        for(int i = 10; i >= stationId.Length; i--)
                         {
                             stationId = "0" + stationId;
                         }
@@ -522,13 +522,13 @@ namespace Hydrology.Forms
                                 }
                             }
 
-                            foreach (var station in m_listSoilStations)
-                            {
-                                if (!string.IsNullOrEmpty(station.GPRS))
-                                {
-                                    dgvDTUList.m_totalGprsCount += 1;
-                                }
-                            }
+                            //foreach (var station in m_listSoilStations)
+                            //{
+                            //    if (!string.IsNullOrEmpty(station.GPRS))
+                            //    {
+                            //        dgvDTUList.m_totalGprsCount += 1;
+                            //    }
+                            //}
 
                             //  更新已经上线的GPRS号码
                             foreach (var dtu in dtuList)
@@ -572,16 +572,16 @@ namespace Hydrology.Forms
                                     }
                                 }
 
-                                foreach (var station in m_listSoilStations)
-                                {
-                                    if (CDBSoilDataMgr.Instance.GetSubCenterBySoilId(int.Parse(station.SubCenterID.ToString())).SubCenterName == SubcenterString)
-                                    {
-                                        if (!string.IsNullOrEmpty(station.GPRS))
-                                        {
-                                            dgvDTUList.m_totalGprsCount += 1;
-                                        }
-                                    }
-                                }
+                                //foreach (var station in m_listSoilStations)
+                                //{
+                                //    if (CDBSoilDataMgr.Instance.GetSubCenterBySoilId(int.Parse(station.SubCenterID.ToString())).SubCenterName == SubcenterString)
+                                //    {
+                                //        if (!string.IsNullOrEmpty(station.GPRS))
+                                //        {
+                                //            dgvDTUList.m_totalGprsCount += 1;
+                                //        }
+                                //    }
+                                //}
                             }
                             catch (Exception ex)
                             {
@@ -605,14 +605,14 @@ namespace Hydrology.Forms
                                             dgvDTUList.RefreshGPRSInfo(port, stationName, stationID, dtu);
                                         }
                                     }
-                                    else if (soil != null)
-                                    {
+                                    //else if (soil != null)
+                                    //{
 
-                                        if (CDBSoilDataMgr.Instance.GetSubCenterBySoilId(int.Parse(soil.SubCenterID.ToString())).SubCenterName == SubcenterString)
-                                        {
-                                            dgvDTUList.RefreshGPRSInfo(port, stationName, stationID, dtu);
-                                        }
-                                    }
+                                    //    if (CDBSoilDataMgr.Instance.GetSubCenterBySoilId(int.Parse(soil.SubCenterID.ToString())).SubCenterName == SubcenterString)
+                                    //    {
+                                    //        dgvDTUList.RefreshGPRSInfo(port, stationName, stationID, dtu);
+                                    //    }
+                                    //}
                                 }
                             }
                             catch (Exception ex)

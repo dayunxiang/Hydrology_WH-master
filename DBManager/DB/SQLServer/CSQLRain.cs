@@ -1579,8 +1579,13 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
             string url = "http://127.0.0.1:8088/rain/insertRain";
-            string jsonStr = HttpHelper.ObjectToJson(rains);
-            param["rain"] = "[{\"BState\":1,\"ChannelType\":6,\"DayRain\":null,\"DifferneceRain\":null,\"MessageType\":2,\"PeriodRain\":null,\"RainID\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 11:00:00\",\"TimeRecieved\":\"2019-3-13 11:15:00\",\"TotalRain\":4}]";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(rains, Newtonsoft.Json.Formatting.None, timeConverter);
+            param["rain"] = jsonStr;
+            //string jsonStr = HttpHelper.ObjectToJson(rains);
+            //param["rain"] = "[{\"BState\":1,\"ChannelType\":6,\"DayRain\":null,\"DifferneceRain\":null,\"MessageType\":2,\"PeriodRain\":null,\"RainID\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 11:00:00\",\"TimeRecieved\":\"2019-3-13 11:15:00\",\"TotalRain\":4}]";
             try
             {
                 string resultJson = HttpHelper.Post(url, param);

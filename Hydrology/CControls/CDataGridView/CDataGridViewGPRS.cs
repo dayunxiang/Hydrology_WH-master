@@ -136,6 +136,10 @@ namespace Hydrology.CControls
                 //  m_mutexDataTable.WaitOne();
                 //string uid = ((uint)dtu.m_modemId).ToString("X").PadLeft(8, '0');
                 string uid = dtu.m_modemId.ToString();
+                for (int i = 10; i >= uid.Length; i--)
+                {
+                    uid = "0" + uid;
+                }
                 string phoneno = "---";
                 string dynIP = CGprsUtil.Byte4ToIP(dtu.m_dynip, 0);
                 
@@ -164,12 +168,13 @@ namespace Hydrology.CControls
                 // 先找到ID所在的行
                 // this.Hide();
                 // m_dataTable_1 = base.m_dataTable;
-
+                string a = m_dataTable_1.Rows[0][CS_StationID].ToString();
+                string b = m_dataTable_1.Rows[0][CS_StationID].ToString();
                 this.BeginInvoke(new System.Action(() =>
                 {
                     for (int i = 0; i < m_dataTable_1.Rows.Count; ++i)
                     {
-                        if (m_dataTable_1.Rows[i][CS_UserId].ToString() == uid)
+                        if (m_dataTable_1.Rows[i][CS_StationID].ToString() == uid)
                         {
                             //m_dataTable_1.Rows.Add(new string[] { port.ToString(), stationName, uid, phoneno, dynIP, connetime.ToString(), refreshTime.ToString(), CS_OnlineOrOffline.ToString(), CS_OnlineOrOfflineFlag, Convert.ToString((int)state) });
                             DataRow newRow = m_dataTable_1.NewRow();

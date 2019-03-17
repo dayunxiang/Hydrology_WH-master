@@ -2517,13 +2517,10 @@ namespace Hydrology.DataMgr
                         int offset = (data.DataTime.Hour - 8) * 60 + data.DataTime.Minute;
                     }
                     //interfaceHelper.Instance.insertRainList(rains);
-                    
-                    m_proxyRain.AddNewRows(rains); //写入数据库
-                                                   //NewTask(() => { foreach (CEntityRain rain in rains) { AssertRainData(rain); } });
-                                                   //foreach (CEntityRain rain in rains) { AssertRainData(rain, ref tmpRTDDataState); }
-                                                   //Task task = new Task(() => { foreach (CEntityRain rain in rains) { AssertRainData(rain); } });
-                                                   //task.Start();
-
+                    if(rains !=null || rains.Count > 0)
+                    {
+                        m_proxyRain.AddNewRows_DataModify(rains);
+                    }
                 }
                 #endregion 雨量表
 
@@ -2570,15 +2567,10 @@ namespace Hydrology.DataMgr
                         water.state = status;
                         listWater.Add(water);
                     }
-                    m_proxyWater.AddNewRows(listWater); //写入数据库
-                                                        //NewTask(() =>
-                                                        //{
-                                                        //foreach (CEntityWater water in listWater)
-                                                        //{
-                                                        //    AssertWaterData(water, ref tmpRTDDataState);
-                                                        //}
-                                                        //});
-                                                        //task.Start();
+                    if(listWater != null && listWater.Count > 0)
+                    {
+                        m_proxyWater.AddNewRows_1(listWater);
+                    }
                 }
                 #endregion 水量表
 
@@ -2602,15 +2594,23 @@ namespace Hydrology.DataMgr
                     voltage.StationID = station.StationID;
                     voltage.TimeCollect = data.DataTime;
                     voltage.TimeRecieved = args.RecvDataTime;
+                   
                     voltage.Voltage = data.Voltage;
                     voltage.ChannelType = args.EChannelType;
                     voltage.MessageType = args.EMessageType;
                     int status = 1;
                     AssertVoltageData(voltage, ref tmpRTDVoltageDataState, ref status);
                     voltage.state = status;
-                    listVoltages.Add(voltage);
+                    if(voltage.Voltage != null &&  voltage.Voltage > 0)
+                    {
+                        listVoltages.Add(voltage);
+                    }
                 }
-                m_proxyVoltage.AddNewRows(listVoltages);
+                //m_proxyVoltage.AddNewRows(listVoltages);
+                if(listVoltages != null && listVoltages.Count > 0)
+                {
+                    m_proxyVoltage.AddNewRows_1(listVoltages);
+                }
                 #endregion 电压表
 
                 #region 实时数据表
@@ -2669,7 +2669,9 @@ namespace Hydrology.DataMgr
                     }
                     else
                     {
-                        realtime.DPeriodRain = calRainForRealTimePeriodRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastClockSharpTotalRain, station.LastClockSharpTime);
+                        //TODO
+                        //realtime.DPeriodRain = calRainForRealTimePeriodRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastClockSharpTotalRain, station.LastClockSharpTime);
+                        realtime.DPeriodRain = null;
                     }
                     if (realtime.DPeriodRain < 0)
                     {

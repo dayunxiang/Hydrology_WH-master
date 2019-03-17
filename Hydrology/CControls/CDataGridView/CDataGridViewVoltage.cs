@@ -204,26 +204,28 @@ namespace Hydrology.CControls
         // 设置查询条件
         public bool SetFilter(string strStationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
+            List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
             // 清空所有状态
             ClearAllState();
             m_strStaionId = strStationId;
             m_dateTimeStart = timeStart;
             m_dateTimeEnd = timeEnd;
-            m_proxyVoltage.SetFilter(strStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyVoltage.GetPageCount())
+            //m_proxyVoltage.SetFilter(strStationId, timeStart, timeEnd, TimeSelect);
+            try
             {
+                voltageList = m_proxyVoltage.SetFilterData(strStationId, timeStart, timeEnd, TimeSelect);
+            }
+            catch (Exception e) {
                 MessageBox.Show("数据库忙，查询失败，请稍后再试！");
                 return false;
-            }
-            else
-            {
-                // 并查询数据，显示第一页
-                this.OnMenuFirstPage(this, null);
-                base.TotalPageCount = m_proxyVoltage.GetPageCount();
-                base.TotalRowCount = m_proxyVoltage.GetRowCount();
-                SetVoltage(m_proxyVoltage.GetPageData(1));
-                return true;
-            }
+            };
+            // 并查询数据，显示第一页
+            this.OnMenuFirstPage(this, null);
+            base.TotalPageCount = m_proxyVoltage.GetPageCount();
+            base.TotalRowCount = m_proxyVoltage.GetRowCount();
+            SetVoltage(voltageList);
+            return true;
+            
 
         }
 

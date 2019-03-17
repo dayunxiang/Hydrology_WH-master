@@ -146,37 +146,25 @@ namespace Hydrology.CControls
         public bool SetFilter(string iStationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
             bool result = false;
+            List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
             m_annotation.Visible = false;
             base.ClearAllDatas();
-            m_proxyVoltage.SetFilter(iStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyVoltage.GetPageCount())
+            try
             {
-                // 查询失败
-                // MessageBox.Show("数据库忙，查询失败，请稍后再试！");
+                voltageList = m_proxyVoltage.SetFilterData(iStationId, timeStart, timeEnd, TimeSelect);
+            }catch(Exception e)
+            {
                 return result;
             }
-            else
+            int rowcount = voltageList.Count;
+            if (rowcount > CI_Chart_Max_Count)
             {
-                int rowcount = m_proxyVoltage.GetRowCount();
-                if (rowcount > CI_Chart_Max_Count)
-                {
-                    // 数据量太大，退出绘图
-                    MessageBox.Show("查询结果集太大，自动退出绘图");
-                    return result;
-                }
-                // 并查询数据，显示第一页
-                int iTotalPage = m_proxyVoltage.GetPageCount();
-                for (int i = 0; i < iTotalPage; ++i)
-                {
-                    // 查询所有的数据
-                    result = this.AddVoltages(m_proxyVoltage.GetPageData(i + 1));
-                    if (result == false)
-                    {
-                        MessageBox.Show("数据超限，自动退出绘图");
-                    }
-                }
-                return result;
+               // 数据量太大，退出绘图
+               MessageBox.Show("查询结果集太大，自动退出绘图");
+               return result;
             }
+            result = this.AddVoltages(voltageList);
+            return result;
         }
 
         public void InitDataSource(IVoltageProxy proxy)

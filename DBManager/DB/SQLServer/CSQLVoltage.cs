@@ -207,8 +207,13 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
             string url = "http://127.0.0.1:8088/voltage/insertVoltage";
-            string jsonStr = HttpHelper.ObjectToJson(voltages);
-            param["voltage"] = "[{\"ChannelType\":6,\"MessageType\":1,\"StationID\":\"0229\",\"TimeCollect\":\"2019-3-13 18:00:00\",\"TimeRecieved\":\"2019-3-13 18:15:00\",\"Voltage\":4,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(voltages, Newtonsoft.Json.Formatting.None, timeConverter);
+            //string jsonStr = HttpHelper.ObjectToJson(voltages);
+            //param["voltage"] = "[{\"ChannelType\":6,\"MessageType\":1,\"StationID\":\"0229\",\"TimeCollect\":\"2019-3-13 18:00:00\",\"TimeRecieved\":\"2019-3-13 18:15:00\",\"Voltage\":4,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            param["voltage"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
@@ -366,37 +371,10 @@ namespace Hydrology.DBManager.DB.SQLServer
             //ResetAll();
             //return true;
         }
-
         public void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
-            ////传递得参数
-            //Dictionary<string, object> param = new Dictionary<string, object>();
-            ////TODO添加datatime转string timeStart timeEnd
 
-            ////查询条件
-            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
-            //paramInner["stationid"] = stationId;
-            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
-            //paramInner["strttime"] = timeStart.ToString();
-            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
-            //paramInner["endtime"] = timeEnd.ToString();
-            ////返回结果
-            //List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
-            ////string suffix = "/subcenter/getSubcenter";
-            //string url = "http://127.0.0.1:8088/voltage/getVoltage";
-            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
-            //param["voltage"] = jsonStr;
-            //try
-            //{
-            //    string resultJson = HttpHelper.Post(url, param);
-            //    voltageList = (List<CEntityVoltage>)HttpHelper.JsonToObject(resultJson, new List<CEntityVoltage>());
-            //}
-            //catch (Exception e)
-            //{
-            //    Debug.WriteLine("查询电压信息失败");
-            //    throw e;
-            //}
-            // 设置查询条件
+            //设置查询条件
             if (null == m_strStaionId)
             {
                 // 第一次查询
@@ -422,6 +400,72 @@ namespace Hydrology.DBManager.DB.SQLServer
                 m_TimeSelect = TimeSelect;
             }
         }
+        /// <summary>
+        /// 设置条件并且查询数据
+        /// </summary>
+        /// <param name="stationId"></param>
+        /// <param name="timeStart"></param>
+        /// <param name="timeEnd"></param>
+        /// <param name="TimeSelect"></param>
+        /// <returns></returns>
+        public List<CEntityVoltage> SetFilterData(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
+        {
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //TODO添加datatime转string timeStart timeEnd
+
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["stationid"] = stationId;
+            //paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            paramInner["strttime"] = timeStart.ToString();
+            //paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            paramInner["endtime"] = timeEnd.ToString();
+            //返回结果
+            List<CEntityVoltage> voltageList = new List<CEntityVoltage>();
+            //string suffix = "/subcenter/getSubcenter";
+            string url = "http://127.0.0.1:8088/voltage/getVoltage";
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["voltage"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+                resultJson = HttpHelper.JsonDeserialize(resultJson);
+                voltageList = (List<CEntityVoltage>)HttpHelper.JsonToObject(resultJson, new List<CEntityVoltage>());
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("查询电压信息失败");
+                throw e;
+                
+            }
+            return voltageList;
+            // 设置查询条件
+            //if (null == m_strStaionId)
+            //{
+            //    // 第一次查询
+            //    m_iRowCount = -1;
+            //    m_iPageCount = -1;
+            //    m_strStaionId = stationId;
+            //    m_startTime = timeStart;
+            //    m_endTime = timeEnd;
+            //    m_TimeSelect = TimeSelect;
+            //}
+            //else
+            //{
+            //    // 不是第一次查询
+            //    if (stationId != m_strStaionId || timeStart != m_startTime || timeEnd != m_endTime || m_TimeSelect != TimeSelect)
+            //    {
+            //        m_iRowCount = -1;
+            //        m_iPageCount = -1;
+            //        m_mapDataTable.Clear(); //清空上次查询缓存
+            //    }
+            //    m_strStaionId = stationId;
+            //    m_startTime = timeStart;
+            //    m_endTime = timeEnd;
+            //    m_TimeSelect = TimeSelect;
+            //}
+        }
 
         public int GetPageCount()
         {
@@ -431,7 +475,6 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             return m_iPageCount;
         }
-
         public int GetRowCount()
         {
             if (-1 == m_iPageCount)
