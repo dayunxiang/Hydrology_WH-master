@@ -37,46 +37,46 @@ namespace Hydrology.DBManager.DB.SQLServer
         // 添加新列
         public void AddNewRow(CEntityWarningInfo entity)
         {
-            //Dictionary<string, object> param = new Dictionary<string, object>();
-            ////string suffix = "user/insertUser";
-            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
-            //string jsonStr = HttpHelper.ObjectToJson(entity);
-            //param["warninginfo"] = jsonStr;
-            //try
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "user/insertUser";
+            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            string jsonStr = HttpHelper.ObjectToJson(entity);
+            param["warninginfo"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("新增告警日志失败");
+            }
+            //// 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
+            //m_mutexDataTable.WaitOne(); //等待互斥量
+            //DataRow row = m_tableDataAdded.NewRow();
+            //row[CN_DataTime] = entity.DataTime;
+            //row[CN_InfoDetail] = entity.InfoDetail;
+            //row[CN_InfoDetail] = entity.InfoDetail;
+            //if (entity.WarningInfoCodeType.HasValue)
             //{
-            //    string resultJson = HttpHelper.Post(url, param);
+            //    row[CN_ErroCode] = CEnumHelper.WarningCodeTypeToDBStr(entity.WarningInfoCodeType.Value);
             //}
-            //catch (Exception e)
+            //else
             //{
-            //    Debug.WriteLine("新增告警日志失败");
+            //    row[CN_ErroCode] = null;
             //}
-            // 记录超过1000条，或者时间超过1分钟，就将当前的数据写入数据库
-            m_mutexDataTable.WaitOne(); //等待互斥量
-            DataRow row = m_tableDataAdded.NewRow();
-            row[CN_DataTime] = entity.DataTime;
-            row[CN_InfoDetail] = entity.InfoDetail;
-            row[CN_InfoDetail] = entity.InfoDetail;
-            if (entity.WarningInfoCodeType.HasValue)
-            {
-                row[CN_ErroCode] = CEnumHelper.WarningCodeTypeToDBStr(entity.WarningInfoCodeType.Value);
-            }
-            else
-            {
-                row[CN_ErroCode] = null;
-            }
-            row[CN_StationID] = entity.StrStationId.ToString();
-            m_tableDataAdded.Rows.Add(row);
-            if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
-            {
-                // 如果超过最大值，写入数据库
-                base.NewTask(() => { AddDataToDB(); });
-            }
-            else
-            {
-                // 没有超过缓存最大值，开启定时器进行检测,多次调用Start()会导致重新计数
-                m_addTimer.Start();
-            }
-            m_mutexDataTable.ReleaseMutex();
+            //row[CN_StationID] = entity.StrStationId.ToString();
+            //m_tableDataAdded.Rows.Add(row);
+            //if (m_tableDataAdded.Rows.Count >= CDBParams.GetInstance().AddBufferMax)
+            //{
+            //    // 如果超过最大值，写入数据库
+            //    base.NewTask(() => { AddDataToDB(); });
+            //}
+            //else
+            //{
+            //    // 没有超过缓存最大值，开启定时器进行检测,多次调用Start()会导致重新计数
+            //    m_addTimer.Start();
+            //}
+            //m_mutexDataTable.ReleaseMutex();
         }
 
         public bool Add(CEntityWarningInfo entity)
@@ -96,60 +96,91 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
                 return true;
             }
-            //Dictionary<string, object> param = new Dictionary<string, object>();
-            ////string suffix = "user/insertUser";
-            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //string suffix = "user/insertUser";
+            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(listEntitys, Newtonsoft.Json.Formatting.None, timeConverter);
             //string jsonStr = HttpHelper.ObjectToJson(listEntitys);
-            //param["warninginfo"] = jsonStr;
-            //try
-            //{
-            //    string resultJson = HttpHelper.Post(url, param);
-            //}
-            //catch (Exception e)
-            //{
-            //    Debug.WriteLine("新增告警日志失败");
-            //    return false;
-            //}
-            //return true;
-            m_mutexDataTable.WaitOne();
-            foreach (CEntityWarningInfo entity in listEntitys)
+            param["warninginfo"] = jsonStr;
+            try
             {
-                DataRow row = m_tableDataAdded.NewRow();
-                row[CN_DataTime] = entity.DataTime;
-                row[CN_InfoDetail] = entity.InfoDetail;
-                m_tableDataAdded.Rows.Add(row);
+                string resultJson = HttpHelper.Post(url, param);
             }
-            m_mutexDataTable.ReleaseMutex();
-            return AddDataToDB();
+            catch (Exception e)
+            {
+                Debug.WriteLine("新增告警日志失败");
+                return false;
+            }
+            return true;
+            //m_mutexDataTable.WaitOne();
+            //foreach (CEntityWarningInfo entity in listEntitys)
+            //{
+            //    DataRow row = m_tableDataAdded.NewRow();
+            //    row[CN_DataTime] = entity.DataTime;
+            //    row[CN_InfoDetail] = entity.InfoDetail;
+            //    m_tableDataAdded.Rows.Add(row);
+            //}
+            //m_mutexDataTable.ReleaseMutex();
+            //return AddDataToDB();
         }
 
         public List<CEntityWarningInfo> QueryWarningInfo(DateTime startTime, DateTime endTime)
         {
-            string sql = string.Format("select * from {0} where {1} between {2} and {3};",
-                CT_TableName,
-                CN_DataTime,
-                base.DateTimeToDBStr(startTime), base.DateTimeToDBStr(endTime));
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            //TODO添加datatime转string timeStart timeEnd
+
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["strttime"] = startTime.ToString();
+            paramInner["endtime"] = endTime.ToString();
+            //返回结果
+            List<CEntityWarningInfo> warningInfoList = new List<CEntityWarningInfo>();
+            //string suffix = "/subcenter/getSubcenter";
+            string url = "http://127.0.0.1:8088/warninginfo/getWarninginfo";
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["warninginfo"] = jsonStr;
             try
             {
-                SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
-                DataTable dataTableTmp = new DataTable();
-                adapter.Fill(dataTableTmp);
-                List<CEntityWarningInfo> results = new List<CEntityWarningInfo>();
-                for (int i = 0; i < dataTableTmp.Rows.Count; ++i)
-                {
-                    CEntityWarningInfo entity = new CEntityWarningInfo();
-                    entity.DataTime = DateTime.Parse(dataTableTmp.Rows[i][CN_DataTime].ToString());
-                    entity.InfoDetail = dataTableTmp.Rows[i][CN_InfoDetail].ToString();
-                    entity.WarningInfoID = long.Parse(dataTableTmp.Rows[i][CN_InfoID].ToString());
-                    results.Add(entity);
-                }
-                return results;
+                string resultJson = HttpHelper.Post(url, param);
+                //warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonToObject(resultJson, new List<CEntityWarningInfo>());
+                warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonDeserialize<List<CEntityWarningInfo>>(resultJson, new List<CEntityWarningInfo>());
             }
-            catch (System.Exception ex)
+            catch (Exception e)
             {
-                Debug.WriteLine("QueryWarningInfo Exception\n{0}", ex.ToString());
-                return null;
+                Debug.WriteLine("查询告警日志信息失败");
+                throw e;
             }
+            return warningInfoList;
+
+            //string sql = string.Format("select * from {0} where {1} between {2} and {3};",
+            //    CT_TableName,
+            //    CN_DataTime,
+            //    base.DateTimeToDBStr(startTime), base.DateTimeToDBStr(endTime));
+            //try
+            //{
+            //    SqlDataAdapter adapter = new SqlDataAdapter(sql, CDBManager.GetInstacne().GetConnection());
+            //    DataTable dataTableTmp = new DataTable();
+            //    adapter.Fill(dataTableTmp);
+            //    List<CEntityWarningInfo> results = new List<CEntityWarningInfo>();
+            //    for (int i = 0; i < dataTableTmp.Rows.Count; ++i)
+            //    {
+            //        CEntityWarningInfo entity = new CEntityWarningInfo();
+            //        entity.DataTime = DateTime.Parse(dataTableTmp.Rows[i][CN_DataTime].ToString());
+            //        entity.InfoDetail = dataTableTmp.Rows[i][CN_InfoDetail].ToString();
+            //        entity.WarningInfoID = long.Parse(dataTableTmp.Rows[i][CN_InfoID].ToString());
+            //        results.Add(entity);
+            //    }
+            //    return results;
+            //}
+            //catch (System.Exception ex)
+            //{
+            //    Debug.WriteLine("QueryWarningInfo Exception\n{0}",ex.ToString());
+            //    return null;
+            //}
         }
 
         public bool DeleteWarningInfo(long id)
@@ -161,33 +192,6 @@ namespace Hydrology.DBManager.DB.SQLServer
         }
         public bool DeleteRange(List<long> listId)
         {
-            //if (listId.Count <= 0)
-            //{
-            //    return true;
-            //}
-            //List<CEntityWarningInfo> warninginfoList = new List<CEntityWarningInfo>();
-            //for (int i = 0; i < listId.Count; i++)
-            //{
-            //    warninginfoList.Add(new CEntityWarningInfo()
-            //    {
-            //        WarningInfoID = listId[i]
-            //    });
-            //}
-            //Dictionary<string, object> param = new Dictionary<string, object>();
-            ////string suffix = "/subcenter/deleteSubcenter";
-            //string url = "http://127.0.0.1:8088//warninginfo/deleteWarninginfo";
-            //string jsonStr = HttpHelper.ObjectToJson(warninginfoList);
-            //param["warninginfo"] = jsonStr;
-            //try
-            //{
-            //    string resultJson = HttpHelper.Post(url, param);
-            //}
-            //catch (Exception e)
-            //{
-            //    Debug.WriteLine("删除告警日志失败");
-            //    return false;
-            //}
-            //return true;
             if (listId.Count <= 0)
             {
                 return true;
