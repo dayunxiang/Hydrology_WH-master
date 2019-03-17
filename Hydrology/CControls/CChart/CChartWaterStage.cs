@@ -210,35 +210,28 @@ namespace Hydrology.CControls
         {
             m_annotation.Visible = false;
             ClearAllDatas();
-            m_proxyWaterFlow.SetFilter(iStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyWaterFlow.GetPageCount())
+            List<CEntityWater> waterList = new List<CEntityWater>();
+            try
             {
-                // 查询失败
-                // MessageBox.Show("数据库忙，查询失败，请稍后再试！");
+                waterList = m_proxyWaterFlow.SetFilterData(iStationId, timeStart, timeEnd, TimeSelect);
+            }
+            catch(Exception E)
+            {
                 return false;
             }
-            else
-            {
                 // 并查询数据，显示第一页
-                m_dMaxWaterFlow = null;
-                m_dMaxWaterStage = null;
-                m_dMinWaterFlow = null;
-                m_dMinWaterStage = null;
-                int iTotalPage = m_proxyWaterFlow.GetPageCount();
-                int rowcount = m_proxyWaterFlow.GetRowCount();
-                if (rowcount > CI_Chart_Max_Count)
-                {
-                    // 数据量太大，退出绘图
-                    MessageBox.Show("查询结果集太大，自动退出绘图");
-                    return false;
-                }
-                for (int i = 0; i < iTotalPage; ++i)
-                {
-                    // 查询所有的数据
-                    this.AddWaters(m_proxyWaterFlow.GetPageData(i + 1));
-                }
-                return true;
-            }
+            m_dMaxWaterFlow = null;
+            m_dMaxWaterStage = null;
+            m_dMinWaterFlow = null;
+            m_dMinWaterStage = null;
+            int rowcount = waterList.Count();
+            if (rowcount > CI_Chart_Max_Count)
+            {
+                MessageBox.Show("查询结果集太大，自动退出绘图");
+                return false;
+            } 
+            this.AddWaters(waterList);
+            return true;
         }
 
         public void InitDataSource(IWaterProxy proxy)

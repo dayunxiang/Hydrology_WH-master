@@ -323,23 +323,20 @@ namespace Hydrology.CControls
             m_strStaionId = strStationId;
             m_dateTimeStart = timeStart;
             m_dateTimeEnd = timeEnd;
-            m_proxyWater.SetFilter(strStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyWater.GetPageCount())
+            List<CEntityWater> waterList = new List<CEntityWater>();
+            try
+            {
+                waterList = m_proxyWater.SetFilterData(strStationId, timeStart, timeEnd, TimeSelect);
+            }catch(Exception e)
             {
                 // 查询失败
                 MessageBox.Show("数据库忙，查询失败，请稍后再试！");
                 return false;
             }
-            else
-            {
-                // 并查询数据，显示第一页
-                this.OnMenuFirstPage(this, null);
-                base.TotalPageCount = m_proxyWater.GetPageCount();
-                base.TotalRowCount = m_proxyWater.GetRowCount();
-                SetWaters(m_proxyWater.GetPageData(1));
-                return true;
-            }
-
+            // 并查询数据，显示第一页
+            this.OnMenuFirstPage(this, null);
+            SetWaters(waterList);
+            return true;
         }
 
         // 添加电压记录

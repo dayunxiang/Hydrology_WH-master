@@ -38,6 +38,8 @@ namespace Hydrology.DBManager.Interface
         /// <param name="timeEnd">结束日期</param>
         void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect);
 
+        List<CEntityRain> SetFilterData(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect);
+
         /// <summary>
         /// 获取当前选择条件下，总共页面数
         /// </summary>

@@ -146,8 +146,8 @@ namespace Hydrology.DBManager.DB.SQLServer
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
-                //warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonToObject(resultJson, new List<CEntityWarningInfo>());
-                warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonDeserialize<List<CEntityWarningInfo>>(resultJson, new List<CEntityWarningInfo>());
+                warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonToObject(resultJson, new List<CEntityWarningInfo>());
+                //warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonDeserialize<List<CEntityWarningInfo>>(resultJson, new List<CEntityWarningInfo>());
             }
             catch (Exception e)
             {

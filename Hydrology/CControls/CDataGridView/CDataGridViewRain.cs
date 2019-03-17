@@ -205,26 +205,26 @@ namespace Hydrology.CControls
         // 设置查询条件
         public bool SetFilter(string iStationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
+            List<CEntityRain> rainList = new List<CEntityRain>();
             ClearAllState();
             m_strStaionId = iStationId;
             m_dateTimeStart = timeStart;
             m_dateTimeEnd = timeEnd;
-            m_proxyRain.SetFilter(iStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyRain.GetPageCount())
+            try
             {
-                // 查询失败
+                rainList = m_proxyRain.SetFilterData(iStationId, timeStart, timeEnd, TimeSelect);
+            }catch(Exception E)
+            {
                 MessageBox.Show("数据库忙，查询失败，请稍后再试！");
                 return false;
             }
-            else
-            {
-                // 并查询数据，显示第一页
-                this.OnMenuFirstPage(this, null);
-                base.TotalPageCount = m_proxyRain.GetPageCount();
-                base.TotalRowCount = m_proxyRain.GetRowCount();
-                SetRain(m_proxyRain.GetPageData(1));
-                return true;
-            }
+           
+           // 并查询数据，显示第一页
+           this.OnMenuFirstPage(this, null);
+           
+           SetRain(rainList);
+           return true;
+            
         }
 
         // 添加雨量记录

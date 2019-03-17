@@ -273,33 +273,26 @@ namespace Hydrology.CControls
         //m=0,时段雨量；m=1,差值雨量；m=2,日雨量
         public bool SetFilter(string iStationId, DateTime timeStart, DateTime timeEnd, int m, bool TimeSelect)
         {
+            List<CEntityRain> rainList = new List<CEntityRain>();
             m_annotation.Visible = false;
             base.ClearAllDatas();
-            m_proxyRain.SetFilter(iStationId, timeStart, timeEnd, TimeSelect);
-            if (-1 == m_proxyRain.GetPageCount())
+            try
             {
-                // 查询失败
-                // MessageBox.Show("数据库忙，查询失败，请稍后再试！");
+                rainList = m_proxyRain.SetFilterData(iStationId, timeStart, timeEnd, TimeSelect);
+            }catch(Exception E)
+            {
                 return false;
             }
-            else
+            
+            int rowcount = rainList.Count;
+            if (rowcount > CI_Chart_Max_Count)
             {
-                int rowcount = m_proxyRain.GetRowCount();
-                if (rowcount > CI_Chart_Max_Count)
-                {
-                    // 数据量太大，退出绘图
-                    MessageBox.Show("查询结果集太大，自动退出绘图");
-                    return false;
-                }
-                // 并查询数据，显示第一页
-                int iTotalPage = m_proxyRain.GetPageCount();
-                for (int i = 0; i < iTotalPage; ++i)
-                {
-                    // 查询所有的数据
-                    this.AddRains(m_proxyRain.GetPageData(i + 1), m);
-                }
-                return true;
+               // 数据量太大，退出绘图
+               MessageBox.Show("查询结果集太大，自动退出绘图");
+               return false;
             }
+           this.AddRains(rainList, m);
+           return true;
         }
 
         public void InitDataSource(IRainProxy proxy)

@@ -382,33 +382,6 @@ namespace Hydrology.DBManager.DB.SQLServer
 
         public void SetFilter(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
         {
-            ////传递得参数
-            //Dictionary<string, object> param = new Dictionary<string, object>();
-            ////TODO添加datatime转string timeStart timeEnd
-
-            ////查询条件
-            //Dictionary<string, string> paramInner = new Dictionary<string, string>();
-            //paramInner["stationid"] = stationId;
-            ////paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
-            //paramInner["strttime"] = timeStart.ToString();
-            ////paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
-            //paramInner["endtime"] = timeEnd.ToString();
-            ////返回结果
-            //List<CEntityWater> waterList = new List<CEntityWater>();
-            ////string suffix = "/subcenter/getSubcenter";
-            //string url = "http://127.0.0.1:8088/water/getWater";
-            //string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
-            //param["water"] = jsonStr;
-            //try
-            //{
-            //    string resultJson = HttpHelper.Post(url, param);
-            //    waterList = (List<CEntityWater>)HttpHelper.JsonToObject(resultJson, new List<CEntityWater>());
-            //}
-            //catch (Exception e)
-            //{
-            //    Debug.WriteLine("查询水位信息失败");
-            //    throw e;
-            //}
             // 设置查询条件
             if (null == m_strStaionId)
             {
@@ -434,6 +407,45 @@ namespace Hydrology.DBManager.DB.SQLServer
                 m_endTime = timeEnd;
                 m_TimeSelect = TimeSelect;
             }
+        }
+        /// <summary>
+        /// 设置查询条件并查询数据
+        /// </summary>
+        /// <param name="stationId"></param>
+        /// <param name="timeStart"></param>
+        /// <param name="timeEnd"></param>
+        /// <param name="TimeSelect"></param>
+        public List<CEntityWater> SetFilterData(string stationId, DateTime timeStart, DateTime timeEnd, bool TimeSelect)
+        {
+            //传递得参数
+            Dictionary<string, object> param = new Dictionary<string, object>();
+
+            //查询条件
+            Dictionary<string, string> paramInner = new Dictionary<string, string>();
+            paramInner["stationid"] = stationId;
+            //paramInner["strttime"] = timeStart.ToString("yyyy-MM-dd HH:mm:ss");
+            paramInner["strttime"] = timeStart.ToString();
+            //paramInner["endtime"] = timeEnd.ToString("yyyy-MM-dd HH:mm:ss");
+            paramInner["endtime"] = timeEnd.ToString();
+            //返回结果
+            List<CEntityWater> waterList = new List<CEntityWater>();
+            
+            string url = "http://127.0.0.1:8088/water/getWater";
+            string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
+            param["water"] = jsonStr;
+            try
+            {
+                string resultJson = HttpHelper.Post(url, param);
+                resultJson = HttpHelper.JsonDeserialize(resultJson);
+                waterList = (List<CEntityWater>)HttpHelper.JsonToObject(resultJson, new List<CEntityWater>());
+                
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("查询水位信息失败");
+                throw e;
+            }
+            return waterList;
         }
 
         public int GetPageCount()

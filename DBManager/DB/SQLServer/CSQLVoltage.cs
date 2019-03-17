@@ -412,7 +412,6 @@ namespace Hydrology.DBManager.DB.SQLServer
         {
             //传递得参数
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //TODO添加datatime转string timeStart timeEnd
 
             //查询条件
             Dictionary<string, string> paramInner = new Dictionary<string, string>();
