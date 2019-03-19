@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLVoltage : CSQLBase, IVoltageProxy
     {
         #region 静态常量
+        private string urlPrefix = "127.0.0.1:8088";
         private const string CT_EntityName = "CEntityVoltage";   //  数据库表Voltage实体类
                                                                  // public static readonly string CT_TableName = "voltage";      //数据库中电压表的名字
                                                                  //public static readonly string CT_TableName = "voltage" + DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + (DateTime.Now.Day < 15 ? "A" : "B"); //数据库中电压表的名字
@@ -121,6 +122,8 @@ namespace Hydrology.DBManager.DB.SQLServer
             m_addTimer_1.Elapsed += new System.Timers.ElapsedEventHandler(EHTimer_1);
             m_addTimer_1.Enabled = false;
             m_addTimer_1.Interval = CDBParams.GetInstance().AddToDbDelay;
+
+            urlPrefix = XmlHelper.urlDic["ip"];s
         }
 
         /// <summary>
@@ -206,7 +209,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            string url = "http://127.0.0.1:8088/voltage/insertVoltage";
+            string suffix = "/voltage/insertVoltage";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/voltage/insertVoltage";
             Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
             //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
             timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
@@ -262,10 +267,15 @@ namespace Hydrology.DBManager.DB.SQLServer
                 });
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
-            string url = "http://127.0.0.1:8088/voltage/deleteVoltage";
-            string jsonStr = HttpHelper.ObjectToJson(voltageList);
-            param["voltage"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"0229\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 15:00:00\",\"Voltage\":null,\"VoltageID\":0,\"state\":0,\"type\":null}]";
+            string suffix = "/voltage/deleteVoltage";
+            string url = "http://" + urlPrefix + suffix;
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(voltageList, Newtonsoft.Json.Formatting.None, timeConverter);
+            //string jsonStr = HttpHelper.ObjectToJson(voltageList);
+            //param["voltage"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"0229\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 15:00:00\",\"Voltage\":null,\"VoltageID\":0,\"state\":0,\"type\":null}]";
+            param["voltage"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
@@ -317,11 +327,15 @@ namespace Hydrology.DBManager.DB.SQLServer
                 return true;
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/subcenter/updateSubcenter";
-            //string url = "http://" + urlPrefix + suffix;
-            string url = "http://127.0.0.1:8088/voltage/updateVoltage";
-            string jsonStr = HttpHelper.ObjectToJson(voltages);
-            param["voltage"] = "[{\"ChannelType\":16,\"MessageType\":2,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 18:15:44\",\"Voltage\":44,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            string suffix = "/voltage/updateVoltage";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/voltage/updateVoltage";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(voltages, Newtonsoft.Json.Formatting.None, timeConverter);
+            //param["voltage"] = "[{\"ChannelType\":16,\"MessageType\":2,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 18:00:00\",\"TimeRecieved\":\"2019/3/13 18:15:44\",\"Voltage\":44,\"VoltageID\":0,\"state\":1,\"type\":null}]";
+            param["voltage"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);

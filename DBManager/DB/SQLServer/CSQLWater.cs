@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLWater : CSQLBase, IWaterProxy
     {
         #region 静态常量
+        private string urlPrefix = "127.0.0.1:8088";
         private const string CT_EntityName = "CEntityWater";   //  数据库表Water实体类
         //public static readonly string CT_TableName = "water";      //数据库中水量表的名字
         public static string CT_TableName
@@ -124,6 +125,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             m_addTimer_1.Elapsed += new System.Timers.ElapsedEventHandler(EHTimer_1);
             m_addTimer_1.Enabled = false;
             m_addTimer_1.Interval = CDBParams.GetInstance().AddToDbDelay;
+
+
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         /// <summary>
@@ -214,7 +218,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             {
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            string url = "http://127.0.0.1:8088/water/insertWater";
+            string suffix = "/water/insertWater";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/water/insertWater";
             Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
             //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
             timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
@@ -272,10 +278,15 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
             //rains_StationDate = DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : rains_StationDate;
-            string url = "http://127.0.0.1:8088/water/deleteWater";
-            string jsonStr = HttpHelper.ObjectToJson(waterList);
-            param["water"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 14:00:00\",\"TimeRecieved\":\"\\/Date(1552460400000+0800)\\/\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":0,\"state\":0}]"
-;
+            string suffix = "/water/deleteWater";
+            string url = "http://" + urlPrefix + suffix;
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(waterList, Newtonsoft.Json.Formatting.None, timeConverter);
+            param["water"] = jsonStr;
+            //string jsonStr = HttpHelper.ObjectToJson(waterList);
+            //param["water"] = "[{\"ChannelType\":0,\"MessageType\":0,\"StationID\":\"3004\",\"TimeCollect\":\"2019/3/13 14:00:00\",\"TimeRecieved\":\"\\/Date(1552460400000+0800)\\/\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":0,\"state\":0}]";
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
@@ -325,11 +336,16 @@ namespace Hydrology.DBManager.DB.SQLServer
                 return true;
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/subcenter/updateSubcenter";
-            //string url = "http://" + urlPrefix + suffix;
-            string url = "http://127.0.0.1:8088/water/updateWater";
-            string jsonStr = HttpHelper.ObjectToJson(waters);
-            param["water"] = "[{\"ChannelType\":16,\"MessageType\":1,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 15:00:00\",\"TimeRecieved\":\"2019/3/13 15:45:44\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":14,\"state\":2}]";
+            string suffix = "/water/updateWater";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/water/updateWater";
+            //string jsonStr = HttpHelper.ObjectToJson(waters);
+            //param["water"] = "[{\"ChannelType\":16,\"MessageType\":1,\"StationID\":\"3004\",\"TimeCollect\":\"2019-3-13 15:00:00\",\"TimeRecieved\":\"2019/3/13 15:45:44\",\"WaterFlow\":null,\"WaterID\":0,\"WaterStage\":14,\"state\":2}]";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(waters, Newtonsoft.Json.Formatting.None, timeConverter);
+            param["water"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);

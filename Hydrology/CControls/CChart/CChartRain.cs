@@ -320,10 +320,6 @@ namespace Hydrology.CControls
             m_serialRain.ChartArea = CS_ChartAreaName_Default;
             m_serialRain.ChartType = SeriesChartType.Column; //如果点数过多， 画图很慢，初步测试不能超过2000个
             m_serialRain.BorderWidth = 0;
-            //m_serialRain.BorderColor = Color.FromArgb(120, 147, 190);
-            //m_serialRain.ShadowColor = Color.FromArgb(64, 0, 0, 0);
-            //m_serialRain.ShadowOffset = 2;
-            //  设置时间类型,对于serial来说
             m_serialRain.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.DateTime;
             m_serialRain.IsXValueIndexed = true; // 自己计算X值，以及边界值,否则翻译不出正确的值
 
