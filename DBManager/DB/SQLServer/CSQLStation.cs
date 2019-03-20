@@ -13,6 +13,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLStation : CSQLBase, IStationProxy
     {
         #region 静态常量
+        private string urlPrefix = "127.0.0.1:8088";
         private const string CT_EntityName = "CEntityStation"; //数据库表Station实体类   
         public static readonly string CT_TableName = "hydlstation"; //数据库测站表的名字
         public static readonly string CN_StationID = "StationID"; //测站的唯一ID
@@ -76,6 +77,11 @@ namespace Hydrology.DBManager.DB.SQLServer
             m_tableDataAdded.Columns.Add(CN_Reportinterval);
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_Station;
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         // 添加新列
@@ -128,8 +134,9 @@ namespace Hydrology.DBManager.DB.SQLServer
                 return true;
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/hydlstation/insertHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/insertHydlstation";
+            string suffix = "/hydlstation/insertHydlstation";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/hydlstation/insertHydlstation";
             string jsonStr = HttpHelper.ObjectToJson(items);
             param["hydlstation"] = jsonStr;
             try
@@ -187,7 +194,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
             //string suffix = "/hydlstation/updateHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/updateHydlstation";
+            string suffix = "/hydlstation/updateHydlstation";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/hydlstation/updateHydlstation";
             string jsonStr = HttpHelper.ObjectToJson(items);
             param["hydlstation"] = jsonStr;
             try
@@ -228,8 +237,9 @@ namespace Hydrology.DBManager.DB.SQLServer
                 });
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "/hydlstation/deleteHydlstation";
-            string url = "http://127.0.0.1:8088/hydlstation/deleteHydlstation";
+            string suffix = "/hydlstation/deleteHydlstation";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/hydlstation/deleteHydlstation";
             string jsonStr = HttpHelper.ObjectToJson(stationList);
             param["hydlstation"] = jsonStr;
             try
@@ -264,7 +274,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             paramInner["stationid"] = "";
 
             List<CEntityStation> stationList = new List<CEntityStation>();
-            string url = "http://127.0.0.1:8088/hydlstation/getHydlStation";
+            string suffix = "/hydlstation/getHydlStation";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/hydlstation/getHydlStation";
             string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
             param["station"] = jsonStr;
             try

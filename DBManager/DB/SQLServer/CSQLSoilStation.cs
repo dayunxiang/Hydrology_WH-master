@@ -19,6 +19,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLSoilStation : CSQLBase, ISoilStationProxy
     {
         #region 静态常量
+        //private string urlPrefix = "127.0.0.1:8088";
         public static readonly string CT_TableName = "soilstation";      //数据库中墒情站表的名字
         public static readonly string CN_StationId = "stationid";   // 站点唯一ID
         public static readonly string CN_SubCenterID = "subcenterid"; //测站所属分中心的唯一ID

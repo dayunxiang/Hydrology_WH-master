@@ -12,6 +12,7 @@ namespace Hydrology.DBManager.DB.SQLServer
     public class CSQLWarningInfo : CSQLBase, IWarningInfoProxy
     {
         #region 静态常量
+        private string urlPrefix = "127.0.0.1:8088";
         private static readonly string CT_TableName = "WarningInfo";    //数据库警告信息表的名字
         private static readonly string CN_DataTime = "DataTime";        //警告信息的时间
         private static readonly string CN_InfoDetail = "InfoDetail";    //警告信息的详细内容
@@ -32,15 +33,26 @@ namespace Hydrology.DBManager.DB.SQLServer
 
             // 初始化互斥量
             m_mutexWriteToDB = CDBMutex.Mutex_TB_WarningInfo;
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         // 添加新列
         public void AddNewRow(CEntityWarningInfo entity)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
-            //string suffix = "user/insertUser";
-            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
-            string jsonStr = HttpHelper.ObjectToJson(entity);
+            List<CEntityWarningInfo> infoList = new List<CEntityWarningInfo>();
+            infoList.Add(entity);
+            string suffix = "/warninginfo/insertWarninginfo";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
+            //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
+            timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+            string jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(infoList, Newtonsoft.Json.Formatting.None, timeConverter);
             param["warninginfo"] = jsonStr;
             try
             {
@@ -98,7 +110,9 @@ namespace Hydrology.DBManager.DB.SQLServer
             }
             Dictionary<string, object> param = new Dictionary<string, object>();
             //string suffix = "user/insertUser";
-            string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
+            string suffix = "/warninginfo/insertWarninginfo";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/warninginfo/insertWarninginfo";
             Newtonsoft.Json.Converters.IsoDateTimeConverter timeConverter = new Newtonsoft.Json.Converters.IsoDateTimeConverter();
             //这里使用自定义日期格式，如果不使用的话，默认是ISO8601格式
             timeConverter.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
@@ -140,14 +154,16 @@ namespace Hydrology.DBManager.DB.SQLServer
             //返回结果
             List<CEntityWarningInfo> warningInfoList = new List<CEntityWarningInfo>();
             //string suffix = "/subcenter/getSubcenter";
-            string url = "http://127.0.0.1:8088/warninginfo/getWarninginfo";
+            string suffix = "/warninginfo/getWarninginfo";
+            string url = "http://" + urlPrefix + suffix;
+            //string url = "http://127.0.0.1:8088/warninginfo/getWarninginfo";
             string jsonStr = HttpHelper.SerializeDictionaryToJsonString(paramInner);
             param["warninginfo"] = jsonStr;
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
+                resultJson = HttpHelper.JsonDeserialize(resultJson);
                 warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonToObject(resultJson, new List<CEntityWarningInfo>());
-                //warningInfoList = (List<CEntityWarningInfo>)HttpHelper.JsonDeserialize<List<CEntityWarningInfo>>(resultJson, new List<CEntityWarningInfo>());
             }
             catch (Exception e)
             {

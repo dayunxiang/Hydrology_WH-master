@@ -24,7 +24,7 @@ namespace Hydrology.Forms
         private static readonly string CS_CMB_ViewStyle_Chart = "图形";
 
         private static readonly string CS_CMB_RainShape_Periodrain = "时段雨量";
-        private static readonly string CS_CMB_RainShape_Differencerain = "差值雨量";
+        private static readonly string CS_CMB_RainShape_Differencerain = "当前雨量";
         private static readonly string CS_CMB_ViewStyle_Dayrain = "日雨量";
 
         private static readonly string CS_CMB_AllData = "全部数据";

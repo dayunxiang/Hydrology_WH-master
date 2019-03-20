@@ -338,7 +338,7 @@ namespace Hydrology.CControls
                         Station.Watersensor = base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString();
                         Station.Reportinterval = base.Rows[m_listEditedRows[i]].Cells[CS_Reportinterval].Value.ToString();
                     }
-                    else if (Station.StationType == EStationType.EHydrology)
+                    else if (Station.StationType == EStationType.EHydrology || Station.StationType == EStationType.EH)
                     {
                         Station.DWaterBase = CStringFromatHelper.ConvertToNullableDecimal(base.Rows[m_listEditedRows[i]].Cells[CS_WBase].Value.ToString());
                         Station.DWaterMax = CStringFromatHelper.ConvertToNullableDecimal(base.Rows[m_listEditedRows[i]].Cells[CS_WMax].Value.ToString());
@@ -346,13 +346,14 @@ namespace Hydrology.CControls
                         Station.DWaterChange = CStringFromatHelper.ConvertToNullableDecimal(base.Rows[m_listEditedRows[i]].Cells[CS_Change].Value.ToString());
                         try
                         {
-                            Station.DRainAccuracy = float.Parse(base.Rows[m_listEditedRows[i]].Cells[CS_RAccuracy].Value.ToString());
+                            //Station.DRainAccuracy = float.Parse(base.Rows[m_listEditedRows[i]].Cells[CS_RAccuracy].Value.ToString());
+                            Station.DRainAccuracy = 1f;
                         }
 #pragma warning disable CS0168 // 声明了变量“e”，但从未使用过
                         catch (Exception e)
 #pragma warning restore CS0168 // 声明了变量“e”，但从未使用过
                         {
-                            Station.DRainAccuracy = 0.5f;
+                            Station.DRainAccuracy = 1f;
                         }
                         Station.DRainChange = CStringFromatHelper.ConvertToNullableDecimal(base.Rows[m_listEditedRows[i]].Cells[CS_RChange].Value.ToString());
                         Station.GSM = base.Rows[m_listEditedRows[i]].Cells[CS_Gsm].Value.ToString();
@@ -363,8 +364,31 @@ namespace Hydrology.CControls
                         Station.Maintran = base.Rows[m_listEditedRows[i]].Cells[CS_Maintran].Value.ToString();
                         Station.Subtran = base.Rows[m_listEditedRows[i]].Cells[CS_Subtran].Value.ToString();
                         Station.Datapotocol = base.Rows[m_listEditedRows[i]].Cells[CS_Dataprotocol].Value.ToString();
-                        Station.Rainsensor = base.Rows[m_listEditedRows[i]].Cells[CS_Rainsensor].Value.ToString();
-                        Station.Watersensor = base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString();
+                        if(base.Rows[m_listEditedRows[i]].Cells[CS_Rainsensor].Value.ToString() == "翻斗雨量"){
+                            Station.Rainsensor = "0";
+                        }
+                        if (base.Rows[m_listEditedRows[i]].Cells[CS_Rainsensor].Value.ToString() == "雨雪量计")
+                        {
+                            Station.Rainsensor = "1";
+                        }
+                        //Station.Rainsensor = base.Rows[m_listEditedRows[i]].Cells[CS_Rainsensor].Value.ToString();
+                        if (base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString() == "浮子水位")
+                        {
+                            Station.Watersensor = "0";
+                        }
+                        if (base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString() == "气泡水位")
+                        {
+                            Station.Watersensor = "1";
+                        }
+                        if (base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString() == "压阻水位")
+                        {
+                            Station.Watersensor = "2";
+                        }
+                        if (base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString() == "雷达水位")
+                        {
+                            Station.Watersensor = "3";
+                        }
+                        //Station.Watersensor = base.Rows[m_listEditedRows[i]].Cells[CS_Watersensor].Value.ToString();
                         Station.Reportinterval = base.Rows[m_listEditedRows[i]].Cells[CS_Reportinterval].Value.ToString();
                     }
                     m_listUpdatedStation.Add(Station);
@@ -622,7 +646,7 @@ namespace Hydrology.CControls
                 //List<CEntityStation> gprsStation = m_proxyStation.getAllGprs_1();
                 //List<CEntitySoilStation> gprsSoilStation = m_proxySoilStation.getAllGprs_1();
                 List<CEntityStation> gprsStation = CDBDataMgr.Instance.GetAllStation();
-                List<CEntitySoilStation> gprsSoilStation = CDBSoilDataMgr.Instance.GetAllSoilStation();
+                //List<CEntitySoilStation> gprsSoilStation = CDBSoilDataMgr.Instance.GetAllSoilStation();
                 List<String> gprs = new List<string>();
                 for (int i = 0; i < gprsStation.Count; i++)
                 {
@@ -631,12 +655,12 @@ namespace Hydrology.CControls
                         gprs.Add(gprsStation[i].GPRS);
                     }
                 }
-                for (int j = 0; j < gprsSoilStation.Count; j++)
-                {
+                //for (int j = 0; j < gprsSoilStation.Count; j++)
+                //{
 
-                    gprs.Add(gprsSoilStation[j].GPRS);
+                //    gprs.Add(gprsSoilStation[j].GPRS);
 
-                }
+                //}
                 if (station.GPRS != "" && gprs.Contains(station.GPRS))
                 {
                     this.Hide();
@@ -766,7 +790,7 @@ namespace Hydrology.CControls
                         }
                     }
                 }
-                else if (station.StationType == EStationType.EHydrology)
+                else if (station.StationType == EStationType.EHydrology  || station.StationType == EStationType.EH)
                 {
                     if (station.DRainAccuracy.ToString() == "无")
                     {

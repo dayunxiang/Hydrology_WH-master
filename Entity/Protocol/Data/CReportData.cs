@@ -21,9 +21,24 @@ namespace Hydrology.Entity
         /// 差值雨量
         /// </summary>
         public Nullable<Decimal> DiffRain { get; set; }
+
+        /// <summary>
+        /// 时段雨量
+        /// </summary>
+        public Nullable<Decimal> PeriodRain { get; set; }
+
+        /// <summary>
+        /// 当前降水量日开始点到现在的降水量，即上个8：00到现在的降水量
+        /// </summary>
+        public Nullable<Decimal> CurrentRain { get; set; }
+
+
+
         /// <summary>
         /// 电压
         /// </summary>
         public Nullable<Decimal> Voltge { get; set; }
+
+        
     }
 }

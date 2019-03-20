@@ -59,7 +59,7 @@ namespace Hydrology.CControls
                 CS_Volatage,CS_Port, CS_MsgType, CS_ChannelType
             };
             // 隐藏延迟列，串口列
-            base.HideColomns = new int[] {4,12};
+            base.HideColomns = new int[] {4,6,9,10,12};
             // 设置一页的数量
             this.PageRowCount = CDBParams.GetInstance().UIPageRowCount;
             string path = string.Empty;

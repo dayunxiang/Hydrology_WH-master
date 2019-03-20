@@ -122,8 +122,11 @@ namespace Hydrology.DBManager.DB.SQLServer
             m_addTimer_1.Elapsed += new System.Timers.ElapsedEventHandler(EHTimer_1);
             m_addTimer_1.Enabled = false;
             m_addTimer_1.Interval = CDBParams.GetInstance().AddToDbDelay;
-
-            urlPrefix = XmlHelper.urlDic["ip"];s
+            if (XmlHelper.urlDic == null || XmlHelper.urlDic.Count == 0)
+            {
+                XmlHelper.getXMLInfo();
+            }
+            urlPrefix = XmlHelper.urlDic["ip"];
         }
 
         /// <summary>
@@ -222,6 +225,7 @@ namespace Hydrology.DBManager.DB.SQLServer
             try
             {
                 string resultJson = HttpHelper.Post(url, param);
+                CDBLog.Instance.AddInfo(string.Format("添加{0}行到电压表", voltages.Count));
             }
             catch (Exception e)
             {

@@ -176,6 +176,16 @@ namespace Hydrology.Entity
         public Nullable<Decimal> DiffRain;
 
         /// <summary>
+        /// 时段雨量
+        /// </summary>
+        public Nullable<Decimal> PeriodRain;
+
+        /// <summary>
+        /// 时段雨量
+        /// </summary>
+        public Nullable<Decimal> CurrentRain;
+
+        /// <summary>
         /// 电压
         /// </summary>
         public Nullable<Decimal> Voltage;

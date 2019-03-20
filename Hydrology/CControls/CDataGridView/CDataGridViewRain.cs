@@ -22,7 +22,7 @@ namespace Hydrology.CControls
         public static readonly string CS_StationName = "站名";
         public static readonly string CS_DayRain = "日雨量";
         public static readonly string CS_TotalRain = "累计雨量";
-        public static readonly string CS_DifferenceRain = "差值雨量";
+        public static readonly string CS_DifferenceRain = "当前雨量";
         public static readonly string CS_PeriodRain = "时段雨量";
         public static readonly string CS_TimeCollected = "采集时间";
         public static readonly string CS_TimeReceived = "接收时间";

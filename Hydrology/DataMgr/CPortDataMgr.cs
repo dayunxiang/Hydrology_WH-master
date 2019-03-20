@@ -953,6 +953,7 @@ namespace Hydrology.DataMgr
                     //TODO
                     query = tcp.Down.BuildQuery(stationID, cmds, EChannelType.TCP);
                     tcp.SendData(stationID, query);
+                    
                 }
                 //1109
                 else
@@ -2630,6 +2631,8 @@ namespace Hydrology.DataMgr
                             WaterStage = item.Water,
                             TotalRain = item.Rain,
                             DiffRain = item.DiffRain,
+                            PeriodRain = item.PeriodRain,
+                            CurrentRain = item.CurrentRain,
                             Voltage = item.Voltge,
                             DataTime = item.Time
                         });

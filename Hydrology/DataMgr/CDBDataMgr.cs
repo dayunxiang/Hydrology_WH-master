@@ -2382,8 +2382,6 @@ namespace Hydrology.DataMgr
             {
 
                 Nullable<Decimal> tmpPeriodRain = null;
-                Nullable<Decimal> tmpDayRain = null;
-                Nullable<Decimal> tmpDifferenceRain = null;
                 Nullable<Decimal> tmpWaterFlow = null;
                 ERTDDataState tmpRTDRainDataState = ERTDDataState.ENormal;
                 ERTDDataState tmpRTDWaterDataState = ERTDDataState.ENormal;
@@ -2417,7 +2415,7 @@ namespace Hydrology.DataMgr
                             continue;
                         }
 
-                        if (data.TotalRain < 0 && data.DiffRain == null && data.DiffRain < 0)
+                        if (data.TotalRain == null && data.PeriodRain == null && data.CurrentRain == null)
                         {
                             continue;
                         }
@@ -2428,96 +2426,59 @@ namespace Hydrology.DataMgr
                         int day = data.DataTime.Day;
                         CEntityRain rain = new CEntityRain();
                         rain.BState = 1;
-                        int status = 1;
-
                         int hour = data.DataTime.Hour;
                         int minute = data.DataTime.Minute;
                         int second = data.DataTime.Second;
-                        if (data.TotalRain.HasValue && data.TotalRain  > 0)
-                        {
-                            CalDifferenceRain(1, data.TotalRain.Value, data.DataTime, station.LastTotalRain, station.DRainChange, ref status, ref tmpDifferenceRain);
-                            station.LastTotalRain = data.TotalRain.Value * 1;
-                        }
-                        if (status == 0)
-                        {
-                            rain.BState = 0;
-                        }
 
-                        station.LastDataTime = data.DataTime;
-                        if (data.TotalRain.ToString() != "" && data.TotalRain.HasValue && data.TotalRain >= 0)
+                        //累计降水量
+                        if (data.TotalRain.HasValue && data.TotalRain >= 0)
                         {
-                            if (hour == 8 && minute == 0 && second == 0)
+                            rain.TotalRain = data.TotalRain;
+                        } else
+                        {
+                            rain.TotalRain = null;
+                        }
+                        //差值降水量
+                        if (data.PeriodRain.HasValue && data.PeriodRain >= 0)
+                        {
+                            rain.PeriodRain = data.PeriodRain;
+                            if(station.DRainChange.HasValue && rain.PeriodRain > station.DRainChange)
                             {
-                                DateTime tmp = new DateTime(year, month, day, 8, 0, 0);
-                                DateTime tmp_1 = tmp.Subtract(new TimeSpan(24, 0, 0));
-                                //station.LastDayTime = tmp.Subtract(new TimeSpan(24, 0, 0));
-                                //station.LastDayTotalRain = m_proxyRain.GetLastDayTotalRain(station.StationID, DateTime.Parse(station.LastDayTime.ToString()));
-                                if (data.TotalRain.HasValue)
-                                {
-                                    CalDayRain(station.StationID, station.DRainAccuracy, data.TotalRain.Value, data.DataTime, station.LastDayTime, station.LastDayTotalRain, tmp_1, ref tmpDayRain, ref status);
-                                }
-                                //更新
-                                if (status == 2)
-                                {
-                                    rain.BState = 2;
-                                }
-                                station.LLastDayTotalRain = station.LastDayTotalRain;
-                                station.LastDayTotalRain = data.TotalRain.Value * (decimal)station.DRainAccuracy;
-                                station.LastDayTime = tmp;
+                                rain.BState = 0;
                             }
-                            if ((minute + second) == 0)
-                            {
-                                //station.LastClockSharpTotalRain = m_proxyRain.GetLastClockSharpTotalRain(station.StationID, data.DataTime);
-                                if (data.TotalRain.HasValue && data.TotalRain > 0)
-                                {
-                                    CalPeriodRain(station.StationID, station.DRainAccuracy, data.TotalRain.Value, data.DataTime, station.LastDataTime, station.LastClockSharpTotalRain, station.LastClockSharpTime, ref tmpPeriodRain, ref status);
-                                }
-                                if (status == 2)
-                                {
-                                    rain.BState = 2;
-                                }
-                                station.LastClockSharpTotalRain = data.TotalRain.Value * (decimal)station.DRainAccuracy;
-                                station.LastClockSharpTime = data.DataTime;
-                            }
-
-                        }
-
-
-                        rain.StationID = station.StationID;
-                        rain.TimeCollect = data.DataTime;
-                        rain.TimeRecieved = args.RecvDataTime;
-                        rain.PeriodRain = (data.DataTime.Minute == 0 && data.DataTime.Second == 0) ? tmpPeriodRain : null;
-                        rain.DayRain = (data.DataTime.Hour == 8 && data.DataTime.Minute == 0) ? tmpDayRain : null;
-                        if(data.DiffRain != null && data.DiffRain >= 0)
-                        {
-                            rain.DifferneceRain = data.DiffRain;
                         }
                         else
                         {
-                            rain.DifferneceRain = tmpDifferenceRain;
+                            rain.PeriodRain = null;
                         }
-                        if(data.TotalRain.HasValue && data.TotalRain > 0)
+
+                        //8：00止当前时间点 当前降水量
+                        if (data.CurrentRain.HasValue && data.CurrentRain >= 0)
                         {
-                            rain.TotalRain = data.TotalRain * 1;
+                            rain.DayRain = data.CurrentRain;
+                            rain.DifferneceRain = data.CurrentRain;
                         }
+                        else
+                        {
+                            rain.DayRain = data.CurrentRain;
+                            rain.DifferneceRain = data.CurrentRain;
+                        }
+                        rain.StationID = args.StrStationID;
+                        rain.TimeCollect = data.DataTime;
+                        rain.TimeRecieved = args.RecvDataTime;
                         rain.MessageType = args.EMessageType;
                         rain.ChannelType = args.EChannelType;
-                        AssertAndAdjustRainData(rain, ref tmpRTDRainDataState);
-                        //rain.DifferneceRain = rain.DifferneceRain.HasValue ? (rain.DifferneceRain < 0 ? 0 : rain.DifferneceRain) : null;
-                        rain.DayRain = rain.DayRain.HasValue ? (rain.DayRain < 0 ? 0 : rain.DayRain) : null;
-                        rain.PeriodRain = rain.PeriodRain.HasValue ? (rain.PeriodRain < 0 ? 0 : rain.PeriodRain) : null;
-                        if(rain.DifferneceRain != null)
+                        if (rain.PeriodRain != null || rain.TotalRain != null || rain.DayRain != null)
                         {
                             rains.Add(rain);
                         }
-                        
                         // 更新站点信息，便于下次计算日雨量和时段雨量
                         station.LastTotalRain = rain.TotalRain;
                         // 如果时间设置的误差范围内
                         int offset = (data.DataTime.Hour - 8) * 60 + data.DataTime.Minute;
                     }
                     //interfaceHelper.Instance.insertRainList(rains);
-                    if(rains !=null || rains.Count > 0)
+                    if(rains !=null && rains.Count > 0)
                     {
                         m_proxyRain.AddNewRows_DataModify(rains);
                     }
@@ -2626,87 +2587,99 @@ namespace Hydrology.DataMgr
                 {
                     realtime.Dvoltage = args.Datas[tmpDataCount - 1].Voltage;   //电压
                 }
-                realtime.TimeDeviceGained = args.Datas[tmpDataCount - 1].DataTime; //采集时间
-                if (realtime.EIStationType == EStationType.EH)
+                if (args.Datas[tmpDataCount - 1].PeriodRain.HasValue && args.Datas[tmpDataCount - 1].PeriodRain>=0)
                 {
-                    if (args.Datas[tmpDataCount - 1].TotalRain > 0)
+                    realtime.DPeriodRain = args.Datas[tmpDataCount - 1].PeriodRain;   //时段雨量
+                    if(station.DRainChange.HasValue && realtime.DPeriodRain > station.DRainChange)
                     {
-                        if (station.LastDayTotalRain.HasValue && station.LLastDayTotalRain.HasValue)
-                        {
-                            realtime.LastDayRainFall = station.LastDayTotalRain.Value - station.LLastDayTotalRain.Value;
-                            if (realtime.LastDayRainFall < 0)
-                            {
-                                if (station.DRainAccuracy != 0)
-                                {
-                                    decimal tmpDiff = 10000 * (decimal)station.DRainAccuracy - station.LLastDayTotalRain.Value + station.LastDayTotalRain.Value;
-                                    if (tmpDiff >= dayInterval)
-                                    {
-                                        realtime.LastDayRainFall = 0;
-                                    }
-                                    else
-                                    {
-                                        realtime.LastDayRainFall = tmpDiff;
-                                    }
-                                }
-                                else
-                                {
-                                    realtime.LastDayRainFall = 0;
-                                }
-                            }
-                            else if (realtime.LastDayRainFall >= dayInterval)
-                            {
-                                realtime.LastDayRainFall = 0;
-                                realtime.ERTDState = ERTDDataState.EError;
-                            }
-                        }
+                        realtime.ERTDState = ERTDDataState.EError;
                     }
+                }
+                if(args.Datas[tmpDataCount - 1].CurrentRain.HasValue && args.Datas[tmpDataCount - 1].CurrentRain >= 0)
+                {
+                    realtime.DDayRainFall = args.Datas[tmpDataCount - 1].CurrentRain;
+                }
+                realtime.TimeDeviceGained = args.Datas[tmpDataCount - 1].DataTime; //采集时间
+                //if (realtime.EIStationType == EStationType.EH)
+                //{
+                //    if (args.Datas[tmpDataCount - 1].TotalRain > 0)
+                //    {
+                //        if (station.LastDayTotalRain.HasValue && station.LLastDayTotalRain.HasValue)
+                //        {
+                //            realtime.LastDayRainFall = station.LastDayTotalRain.Value - station.LLastDayTotalRain.Value;
+                //            if (realtime.LastDayRainFall < 0)
+                //            {
+                //                if (station.DRainAccuracy != 0)
+                //                {
+                //                    decimal tmpDiff = 10000 * (decimal)station.DRainAccuracy - station.LLastDayTotalRain.Value + station.LastDayTotalRain.Value;
+                //                    if (tmpDiff >= dayInterval)
+                //                    {
+                //                        realtime.LastDayRainFall = 0;
+                //                    }
+                //                    else
+                //                    {
+                //                        realtime.LastDayRainFall = tmpDiff;
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    realtime.LastDayRainFall = 0;
+                //                }
+                //            }
+                //            else if (realtime.LastDayRainFall >= dayInterval)
+                //            {
+                //                realtime.LastDayRainFall = 0;
+                //                realtime.ERTDState = ERTDDataState.EError;
+                //            }
+                //        }
+                //    }
 
                     //realtime.DDayRainFall = tmpDayRain; //保存的是最有一次计算的结果
                     // CalPeriodRain(station.StationID, station.DRainAccuracy, data.TotalRain.Value, data.DataTime, station.LastDataTime, station.LastClockSharpTotalRain, station.LastClockSharpTime, ref tmpPeriodRain, ref status);
-                    if (args.Datas[tmpDataCount - 1].DataTime.Minute + args.Datas[tmpDataCount - 1].DataTime.Second == 0)
-                    {
-                        realtime.DPeriodRain = tmpPeriodRain;
-                    }
-                    else
-                    {
-                        //TODO
-                        //realtime.DPeriodRain = calRainForRealTimePeriodRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastClockSharpTotalRain, station.LastClockSharpTime);
-                        realtime.DPeriodRain = null;
-                    }
-                    if (realtime.DPeriodRain < 0)
-                    {
-                        realtime.DPeriodRain = null;
-                    }
+                    //if (args.Datas[tmpDataCount - 1].DataTime.Minute + args.Datas[tmpDataCount - 1].DataTime.Second == 0)
+                    //{
+                    //    realtime.DPeriodRain = tmpPeriodRain;
+                    //}
+                    //else
+                    //{
+                    //    //TODO
+                    //    //realtime.DPeriodRain = calRainForRealTimePeriodRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastClockSharpTotalRain, station.LastClockSharpTime);
+                    //    realtime.DPeriodRain = null;
+                    //}
+                    //if (realtime.DPeriodRain < 0)
+                    //{
+                    //    realtime.DPeriodRain = null;
+                    //}
                     //realtime.DPeriodRain = tmpPeriodRain; //保存的是最有一次计算的结果
-                    if (args.Datas[tmpDataCount - 1].DataTime.Hour == 8 && args.Datas[tmpDataCount - 1].DataTime.Minute == 0 && args.Datas[tmpDataCount - 1].DataTime.Second == 0)
-                    {
-                        // realtime.DDayRainFall = tmpDayRain;
-                        realtime.DDayRainFall = 0;
-                    }
-                    else
-                    {
-                        DateTime tmpOld = new DateTime();
-                        DateTime tmp = new DateTime();
-                        if (args.Datas[tmpDataCount - 1].DataTime.Hour > 8)
-                        {
-                            tmpOld = args.Datas[tmpDataCount - 1].DataTime;
-                            tmp = new DateTime(tmpOld.Year, tmpOld.Month, tmpOld.Day, 8, 0, 0);
-                        }
-                        else
-                        {
-                            tmpOld = args.Datas[tmpDataCount - 1].DataTime;
-                            tmp = new DateTime(tmpOld.Year, tmpOld.Month, tmpOld.Day, 8, 0, 0);
-                            tmp = tmp.Subtract(new TimeSpan(24, 0, 0));
-                        }
-                        //   DateTime tmpUse = tmp.Subtract(new TimeSpan(24, 0, 0));
-                        realtime.DDayRainFall = calRainForRealTimeDayRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastDayTotalRain, station.LastDayTime, tmp);
-                    }
-                    if (realtime.DDayRainFall < 0)
-                    {
-                        realtime.DDayRainFall = null;
-                    }
-                }
-                if (realtime.EIStationType == EStationType.EH || realtime.EIStationType == EStationType.EHydrology)
+                    //if (args.Datas[tmpDataCount - 1].DataTime.Hour == 8 && args.Datas[tmpDataCount - 1].DataTime.Minute == 0 && args.Datas[tmpDataCount - 1].DataTime.Second == 0)
+                    //{
+                    //    // realtime.DDayRainFall = tmpDayRain;
+                    //    realtime.DDayRainFall = 0;
+                    //}
+                    //else
+                    //{
+                    //    DateTime tmpOld = new DateTime();
+                    //    DateTime tmp = new DateTime();
+                    //    if (args.Datas[tmpDataCount - 1].DataTime.Hour > 8)
+                    //    {
+                    //        tmpOld = args.Datas[tmpDataCount - 1].DataTime;
+                    //        tmp = new DateTime(tmpOld.Year, tmpOld.Month, tmpOld.Day, 8, 0, 0);
+                    //    }
+                    //    else
+                    //    {
+                    //        tmpOld = args.Datas[tmpDataCount - 1].DataTime;
+                    //        tmp = new DateTime(tmpOld.Year, tmpOld.Month, tmpOld.Day, 8, 0, 0);
+                    //        tmp = tmp.Subtract(new TimeSpan(24, 0, 0));
+                    //    }
+                    //    //   DateTime tmpUse = tmp.Subtract(new TimeSpan(24, 0, 0));
+                    //    realtime.DDayRainFall = calRainForRealTimeDayRain(station.StationID, args.Datas[tmpDataCount - 1].TotalRain, args.Datas[tmpDataCount - 1].DataTime, station.DRainAccuracy, station.LastDayTotalRain, station.LastDayTime, tmp);
+                    //}
+                    //if (realtime.DDayRainFall < 0)
+                    //{
+                    //    realtime.DDayRainFall = null;
+                    //}
+                //}
+                if (realtime.EIStationType == EStationType.EH)
                 {
                     if (args.Datas[tmpDataCount - 1].WaterStage != -200 && args.Datas[tmpDataCount - 1].WaterStage != -20000)
                     {
