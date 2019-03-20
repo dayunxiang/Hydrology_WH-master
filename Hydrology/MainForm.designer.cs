@@ -949,7 +949,7 @@
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip;
             this.Name = "MainForm";
-            this.Text = "水文自动监测管理系统——湖北一方科技发展有限责任公司 V1.0 - LN";
+            this.Text = "水文自动监测管理系统—— V1.0 - WH";
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             this.MouseEnter += new System.EventHandler(this.MainForm_MouseEnter);
             this.menuStrip.ResumeLayout(false);
