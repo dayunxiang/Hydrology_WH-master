@@ -19,10 +19,14 @@ namespace Hydrology.Entity
     public class DownEventArgs : EventArgs
     {
         public CDownConf Value { get; set; }
+
+        public CDownConfGY gyValue { get; set; }
         /// <summary>
         /// 原始数据
         /// </summary>
         public string RawData { get; set; }
+
+        public CReportStruct rpValue { get; set; }
     }
 
     public class BatchEventArgs : EventArgs

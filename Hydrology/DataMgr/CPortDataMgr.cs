@@ -561,6 +561,24 @@ namespace Hydrology.DataMgr
             return query;
         }
 
+        public String SendSetMsgGY(string id, string stationID, IList<EDownParamGY> cmds, CDownConfGY down, EChannelType ctype)
+        {
+            string query = string.Empty;
+            if (EChannelType.GPRS == ctype)
+            {
+                query = SendGprsSetGY(id, stationID, cmds, down);
+            }
+            else if (EChannelType.GSM == ctype)
+            {
+                query = SendGsmSetGY(id, stationID, cmds, down);
+            }
+            else if (EChannelType.TCP == ctype)
+            {
+                query = SendTcpSetGY(id, stationID, cmds, down);
+            }
+            return query;
+        }
+
         private String SendUDiskMsg(string id, string stationID, EStationType stype, ETrans trans, DateTime beginTime, EChannelType ctype)
         {
             string query = string.Empty;
@@ -954,6 +972,7 @@ namespace Hydrology.DataMgr
                     query = tcp.Down.BuildQuery(stationID, cmds, EChannelType.TCP);
                     tcp.SendData(stationID, query);
                     
+
                 }
                 //1109
                 else
@@ -974,6 +993,30 @@ namespace Hydrology.DataMgr
         /// <param name="stationID">站点ID</param>
         /// <param name="down">查询参数</param>
         public String SendGprsSet(string userid, string stationID, IList<EDownParam> cmds, CDownConf down)
+        {
+            string query = string.Empty; ;
+            var gprs = FindGprsByUserid(userid);
+            if (gprs != null)
+            {
+                uint dtuID = 0;
+                if (gprs.FindByID(userid, out dtuID))
+                {
+                    query = gprs.Down.BuildSet(stationID, cmds, down, EChannelType.GPRS);
+                    gprs.SendDataTwice(dtuID, query);
+                }
+                else
+                {
+                    MessageBox.Show("站点" + stationID + "当前不在线！");
+                }
+            }
+            else
+            {
+                MessageBox.Show("站点" + stationID + "当前不在线！");
+            }
+            return query;
+        }
+
+        public String SendGprsSetGY(string userid, string stationID, IList<EDownParamGY> cmds, CDownConfGY down)
         {
             string query = string.Empty; ;
             var gprs = FindGprsByUserid(userid);
@@ -1029,6 +1072,33 @@ namespace Hydrology.DataMgr
             }
             return query;
         }
+
+
+        public String SendTcpSetGY(string userid, string stationID, IList<EDownParamGY> cmds, CDownConfGY down)
+        {
+            //TODO
+            string query = string.Empty; ;
+            var gprs = FindGprsByUserid(userid);
+            if (gprs != null)
+            {
+                uint dtuID = 0;
+                if (gprs.FindByID(userid, out dtuID))
+                {
+                    query = gprs.Down.BuildSet(stationID, cmds, down, EChannelType.GPRS);
+                    gprs.SendDataTwice(dtuID, query);
+                }
+                else
+                {
+                    MessageBox.Show("站点" + stationID + "当前不在线！");
+                }
+            }
+            else
+            {
+                MessageBox.Show("站点" + stationID + "当前不在线！");
+            }
+            return query;
+        }
+
         /// <summary>
         /// GPRS 发送优盘批量传输数据
         /// </summary>
@@ -1357,6 +1427,21 @@ namespace Hydrology.DataMgr
         /// <param name="down">查询参数</param>
         /// <returns></returns>
         private string SendGsmSet(string gsmNum, string stationID, IList<EDownParam> cmds, CDownConf down)
+        {
+            string qry = string.Empty;
+            var gsm = FindGsm(stationID);
+            if (gsm != null)
+            {
+                qry = gsm.Down.BuildSet(stationID, cmds, down, EChannelType.GSM);
+                Debug.Write(qry);
+                // 写入系统日志
+                String returnMsg = string.Empty;
+                gsm.SendMsg(gsmNum, qry);
+            }
+            return qry;
+        }
+
+        private string SendGsmSetGY(string gsmNum, string stationID, IList<EDownParamGY> cmds, CDownConfGY down)
         {
             string qry = string.Empty;
             var gsm = FindGsm(stationID);
@@ -2407,12 +2492,23 @@ namespace Hydrology.DataMgr
         /// </summary>
         public static void DownDataReceived(object sender, DownEventArgs e)
         {
-            CDownConf down = e.Value;
-            if (down != null && DownForUI != null)
+            #region 原来的处理
+            //CDownConf down = e.Value;
+            //if (down != null && DownForUI != null)
+            //{
+            //    DownForUI.Invoke(sender, e);
+            //}
+            //if (down != null && DownForData != null)
+            //{
+            //    DownForData.Invoke(sender, e);
+            //}
+            #endregion
+            CReportStruct rpValue = e.rpValue;
+            if(rpValue != null && DownForUI != null)
             {
                 DownForUI.Invoke(sender, e);
             }
-            if (down != null && DownForData != null)
+            if (rpValue != null && DownForData != null)
             {
                 DownForData.Invoke(sender, e);
             }
@@ -2444,10 +2540,14 @@ namespace Hydrology.DataMgr
             }
             //gm 0331
             string str = e.RawData;
+            #region 1G21
             if (str.Contains("1G21") || str.Contains("1G22"))
             {
                 CPortDataMgr.Instance.dataNum = CPortDataMgr.Instance.dataNum + 1;
             }
+            #endregion
+
+            #region 1G2111
             if (str.Contains("1G2111"))
             {
                 var stationDatas = new CEventRecvStationDatasArgs()
@@ -2460,9 +2560,6 @@ namespace Hydrology.DataMgr
                     EChannelType = report.ChannelType,
                     StrSerialPort = report.ListenPort
                 };
-                //string hour = str.Substring(11, 2);
-                //string minute = str.Substring(13, 2);
-                //DateTime collect = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, minute, 0);
                 string[] lists = str.Substring(15).Split(CSpecialChars.BALNK_CHAR);
                 //stationDatas.Datas
                 try
@@ -2488,6 +2585,9 @@ namespace Hydrology.DataMgr
                 CDBDataMgr.Instance.EHRecvStationTSDatas(null, stationDatas);
                 return;
             }
+            #endregion
+
+            #region 1G23
             if (str.Contains("1G23"))
             {
                 var stationDatas = new CEventRecvStationDatasArgs()
@@ -2536,6 +2636,9 @@ namespace Hydrology.DataMgr
                 CDBDataMgr.Instance.EHRecvStationTSDatas(null, stationDatas);
                 return;
             }
+            #endregion
+
+            #region +32 短信
             // 有待修改
             if (str.Contains("+32"))
             {
@@ -2553,6 +2656,9 @@ namespace Hydrology.DataMgr
                 sw.Close();
                 fs.Close();
             }
+            #endregion
+
+            #region COUT 北斗
             if (str.Contains("COUT"))
             {
                 if (str.Contains("COUT"))
@@ -2569,6 +2675,9 @@ namespace Hydrology.DataMgr
                 sw.Close();
                 fs.Close();
             }
+            #endregion
+
+            #region TS 调试信息
             if (str.Contains("TS"))
             {
                 var stationDatas = new CEventRecvStationDatasArgs()
@@ -2601,6 +2710,10 @@ namespace Hydrology.DataMgr
                 CDBDataMgr.Instance.EHRecvStationTSDatas(null, stationDatas);
 
             }
+
+            #endregion
+
+            #region 其他报文
             else
             {
                 if (report != null)
@@ -2642,6 +2755,7 @@ namespace Hydrology.DataMgr
                     CDBDataMgr.Instance.EHRecvStationDatas(null, stationDatas);
                 }
             }
+            #endregion
         }
 
         public static CReportData WrongParser(string data)
@@ -2773,6 +2887,10 @@ namespace Hydrology.DataMgr
             {
                 ErrorForData(null, e);
             }
+            if (ErrorForData != null)
+            {
+                DownForTru(null, e);
+            }
         }
         public static void SerialPortStateChanged(object sender, CEventSingleArgs<CSerialPortState> e)
         {
@@ -2821,6 +2939,7 @@ namespace Hydrology.DataMgr
         public static event EventHandler<BatchEventArgs> BatchForData;
         public static event EventHandler<UpEventArgs> UpForUI;
         public static event EventHandler<ReceiveErrorEventArgs> ErrorForUI;
+        public static event EventHandler<ReceiveErrorEventArgs> DownForTru;
         public static event EventHandler<ReceiveErrorEventArgs> ErrorForData;
         public static event EventHandler<COUTEventArgs> COUT4UI;
         public static event EventHandler<TSTAEventArgs> TSTA4UI;

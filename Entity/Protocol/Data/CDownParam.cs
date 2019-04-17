@@ -130,128 +130,134 @@ namespace Hydrology.Entity
     public enum EDownParamGY
     {
         /// <summary>
-        /// 03 时钟
+        /// 03 遥测站实时数据
         /// </summary>
-        ontime,
+        Rdata,
 
         /// <summary>
-        /// 04 常规状态
+        /// 04 人工置数
         /// </summary>
-        DRZ,
+        ArtifN,
 
         /// <summary>
-        /// 05 电压
+        /// 05 指定要素
         /// </summary>
-        testtime,
+        Selement,
 
         /// <summary>
-        /// 08 站号
+        /// 08 查询水泵实时数据
+        /// </summary>
+        pumpRead,
+
+        /// <summary>
+        /// 14 查询软件版本
+        /// </summary>
+        version,
+
+        /// <summary>
+        /// 24 查询报警信息
+        /// </summary>
+        alarm,
+
+        /// <summary>
+        /// 20 设置遥测站时钟
+        /// </summary>
+        clockset,
+
+        /// <summary>
+        /// 19 查询事件记录
+        /// </summary>
+        history,
+
+        /// <summary>
+        /// 27 查询遥测站时钟
+        /// </summary>
+        clocksearch,
+
+        /// <summary>
+        /// 28 旧密码
         /// </summary>
         oldPwd,
 
         /// <summary>
-        /// 14 对时选择
+        /// 37 新密码
         /// </summary>
         newPwd,
 
         /// <summary>
-        /// 24 定时段次
+        /// 49 初始化固态存储
         /// </summary>
         memoryReset,
 
         /// <summary>
-        /// 20 工作状态
-        /// </summary>
-        timeFrom,
-
-        /// <summary>
-        /// 19 版本号
-        /// </summary>
-        timeTo,
-
-        /// <summary>
-        /// 27 主备信道
+        /// 15 时段起止时间
         /// </summary>
         timeFrom_To,
 
         /// <summary>
-        /// 28 SIM卡号
+        /// 09  1 小时内 5 分钟间隔相对水位
+        /// </summary>
+        DRZ,
+
+        /// <summary>
+        /// 16 1 小时内每 5 分钟时段雨量
         /// </summary>
         DRP,
 
         /// <summary>
-        /// 37 振铃次数
+        /// 10 时间步长码
         /// </summary>
         Step,
 
         /// <summary>
-        /// 49 目的地手机号码
+        /// 62 遥测站基本配置读取
         /// </summary>
-        basicConfig,
+        basicConfigRead,
 
         /// <summary>
-        /// 15 终端机号
+        /// 02 遥测站基本配置修改
         /// </summary>
-        operatingPara,
+        basicConfigModify,
 
         /// <summary>
-        /// 09 响应波束
+        /// 12 运行参数读取
+        /// </summary>
+        operatingParaRead,
+
+        /// <summary>
+        /// 06 运行参数修改
+        /// </summary>
+        operatingParaModify,
+
+        /// <summary>
+        /// 11 恢复出厂设置
         /// </summary>
         Reset,
 
         /// <summary>
-        /// 16 平均时间
+        /// 07 设罝遥测站IC卡状态
         /// </summary>
         ICconfig,
 
         /// <summary>
-        /// 10 雨量加报值
+        /// 54  控制水泵状态
         /// </summary>
         pumpCtrl,
 
         /// <summary>
-        /// 62 KC
+        /// 55  控制阀门状态
         /// </summary>
         valveCtrl,
 
         /// <summary>
-        /// 02 雨量
+        /// 56  控制闸门状态
         /// </summary>
         gateCtrl,
 
         /// <summary>
-        /// 12 水位
+        /// 57 水量定值控制
         /// </summary>
-        waterYield,
-
-        /// <summary>
-        /// 06 水位加报值
-        /// </summary>
-        WaterPlusReportedValue,
-
-        /// <summary>
-        /// 11 采集段次选择
-        /// </summary>
-        SelectCollectionParagraphs,
-
-        /// <summary>
-        /// 07 测站类型
-        /// </summary>
-        StationType,
-
-        /// <summary>
-        /// 54  用户名
-        /// </summary>
-        UserName,
-
-        /// <summary>
-        /// 55  测站名
-        /// </summary>
-        StationName,
-
-        Version
-
-
+        waterYield
     }
     public enum ENormalState
     {

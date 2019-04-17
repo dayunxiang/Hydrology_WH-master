@@ -303,7 +303,7 @@ namespace Hydrology.CControls
                 if (this.IsHandleCreated)
                 {
                     #region 更新UI
-                    if (info.Water.HasValue)
+                    if (info.RealWater.HasValue)
                     {
                         try
                         {

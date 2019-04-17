@@ -425,6 +425,19 @@ namespace Hydrology.DataMgr
             }
             return subcenterName; //没找到匹配，返回空
         }
+        /// <summary>
+        /// 根据gprs号码获取站点ID
+        /// </summary>
+        /// <param name="gprs"></param>
+        /// <returns></returns>
+        public string GetStationIDByGprs(string gprs)
+        {
+            if (m_mapGprsStation.ContainsKey(gprs))
+            {
+                return m_mapGprsStation[gprs].StationID;
+            }
+            return null;
+        }
 
         public CEntitySubCenter GetSubCenterByName(string name)
         {
@@ -2403,7 +2416,8 @@ namespace Hydrology.DataMgr
                 }
                 // 更新水量表，雨量表以及电压表
                 #region 雨量表
-                if ( args.EStationType == EStationType.EH)
+                if ( args.EStationType == EStationType.EH  || args.EStationType == EStationType.RE || args.EStationType == EStationType.GT 
+                    || args.EStationType == EStationType.RP || args.EStationType == EStationType.ERainFall || args.EStationType == EStationType.EHydrology)
                 {
                     List<CEntityRain> rains = new List<CEntityRain>();
                     foreach (CSingleStationData data in args.Datas)
@@ -2486,7 +2500,8 @@ namespace Hydrology.DataMgr
                 #endregion 雨量表
 
                 #region 水位表
-                if (args.EStationType == EStationType.EH)
+                if (args.EStationType == EStationType.EH || args.EStationType == EStationType.RE || args.EStationType == EStationType.GT
+                    || args.EStationType == EStationType.RP ||  args.EStationType == EStationType.EHydrology)
                 {
                     List<CEntityWater> listWater = new List<CEntityWater>();
                     foreach (CSingleStationData data in args.Datas)

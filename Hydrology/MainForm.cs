@@ -168,7 +168,7 @@ namespace Hydrology
 
                 CPortDataMgr.Instance.StartTransparen();
 
-                grpcServer.Instance.InitGrpcServer();
+                GrpcServer.Instance.InitGrpcServer();
 
                 // 计算启动时间，写入日志文件
                 TimeSpan span = DateTime.Now - timeBegin;
@@ -299,7 +299,7 @@ namespace Hydrology
                     }
                 }
                 //关闭grpc服务器
-                grpcServer.Instance.StopGrpcServer();
+                GrpcServer.Instance.StopGrpcServer();
                 // 停止端口以及串口服务
                 CPortDataMgr.Instance.CloseAll();
 

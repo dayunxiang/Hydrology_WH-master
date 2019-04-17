@@ -107,6 +107,15 @@ namespace Hydrology.Entity
         /// 12 水位
         /// </summary>
         public Nullable<Decimal> Water;
+        /// <summary>
+        /// 12 存储水位
+        /// </summary>
+        public Nullable<Decimal> StorageWater;
+
+        /// <summary>
+        /// 13 水位
+        /// </summary>
+        public Nullable<Decimal> RealWater;
 
         /// <summary>
         /// 06 水位加报值
@@ -132,5 +141,46 @@ namespace Hydrology.Entity
         /// 55  测站名
         /// </summary>
         public String StationName;
+    }
+
+    public class CDownConfGY
+    {
+        /// <summary>
+        /// 01  水泵控制
+        /// </summary>
+        public String PumpCtrl;
+        /// <summary>
+        /// 02  阀门控制
+        /// </summary>
+        public String ValveCtrl;
+        /// <summary>
+        /// 03  闸门控制
+        /// </summary>
+        public String GateCtrl;
+        /// <summary>
+        /// 04  旧密码
+        /// </summary>
+        public String OldPwd;
+        /// <summary>
+        /// 05  新密码
+        /// </summary>
+        public String NewPwd;
+        /// <summary>
+        /// 06  IC卡设置
+        /// </summary>
+        public String ICconfig;
+        /// <summary>
+        /// 07  水量定值控制
+        /// </summary>
+        public String WaterYield;
+        /// <summary>
+        /// 08  基本配置修改
+        /// </summary>
+        public String BasicConfigModify;
+        /// <summary>
+        /// 09  运行参数修改
+        /// </summary>
+        public String OperatingParaModify;
+
     }
 }

@@ -32,8 +32,10 @@ namespace Hydrology.Entity
         ESoilRain = 4,     //  05墒情雨量站
         ESoilWater = 5,     //  06，16墒情水位站
         ESoilHydrology = 6, //  07，17墒情水文站
-        EH = 7 //河道站
-            
+        EH = 7,//河道站
+        RE = 8,//水库（湖泊）站
+        GT = 9,//闸坝站
+        RP = 10 // 泵站
     }
 
     public enum EStationTypeProto
@@ -62,7 +64,29 @@ namespace Hydrology.Entity
         EMannual,
         EUinform, //均匀时段报
         EHour, //小时报
-        ETest //测试报
+        ETest, //测试报
+        EArtifN, //人工置数
+        ERdata, //查询遥测站实时数据
+        EPdata, //查询遥测站时段数据
+        EArtifNReport, //人工置数报
+        EPicture, //遥测站图片报或中心站查询遥测站图片采集信息
+        EbasicConfigModify, //修改遥测站基本数据
+        EbasicConfigRead, //读取遥测站基本配置表
+        EoperatingParaModify, //修改遥测站运行参数配置表
+        EoperatingParaRead, //读取遥测站运行参数配置表
+        EpumpRead, //查询水泵电机实时工作数据
+        Eversion, //查询遥测终端软件版本
+        Ealarm,  //查询遥测站状态和报警信息
+        EmemoryReset, //初始化固态存储数据
+        EReset, //恢复终端出厂设置
+        EChangepwd, //修改密码
+        Eclockset, //设置遥测站时钟
+        EICconfig, //设置遥测终端IC卡状态
+        EpumpCtrl, //控制水泵开关命令/水泵状态信息自报
+        EvalveCtrl, //控制阀门开关命令/阀门状态信息自报
+        EgateCtrl, //控制闸门开关命令/闸门状态信息自报
+        EwaterYield, //水量定值控制命令
+        Ehistory //中心站查询遥测站事件记录
 
     };
 
@@ -452,6 +476,17 @@ namespace Hydrology.Entity
         public static readonly string CS_EStationType_RiverHydro_UIStr = "河道站";
         public static readonly string CS_EStationType_RiverHydro_DBStr = "7";
 
+        public static readonly string CS_EStationType_SK_UIStr = "水库（湖泊）";
+        public static readonly string CS_EStationType_SK_DBStr = "8";
+
+        public static readonly string CS_EStationType_ZB_UIStr = "闸坝";
+        public static readonly string CS_EStationType_ZB_DBStr = "9";
+
+        public static readonly string CS_EStationType_BZ_UIStr = "泵站";
+        public static readonly string CS_EStationType_BZ_DBStr = "10";
+
+        
+
         //        ESoil = 3,         //  04墒情站
         //ESoilRain = 4,     //  05墒情雨量站
         //ESoilWater = 5,     //  06，16墒情水位站
@@ -470,6 +505,9 @@ namespace Hydrology.Entity
                 case EStationType.ESoilWater: { result = CS_EStationType_ESoilWater_UIStr; } break;
                 case EStationType.ESoilHydrology: { result = CS_EStationType_ESoilHydrology_UIStr; } break;
                 case EStationType.EH: { result = CS_EStationType_RiverHydro_UIStr; } break;
+                case EStationType.RE: { result = CS_EStationType_SK_UIStr; } break;
+                case EStationType.GT: { result = CS_EStationType_ZB_UIStr; } break;
+                case EStationType.RP: { result = CS_EStationType_BZ_UIStr; } break;
                 default: { result = "未知站点类型"; } break;
             }
             return result;
@@ -522,6 +560,12 @@ namespace Hydrology.Entity
                 return EStationType.ESoilHydrology;
             else if (type.Equals(CS_EStationType_RiverHydro_UIStr))
                 return EStationType.EH;
+            else if (type.Equals(CS_EStationType_SK_UIStr))
+                return EStationType.RE;
+            else if (type.Equals(CS_EStationType_ZB_UIStr))
+                return EStationType.GT;
+            else if (type.Equals(CS_EStationType_BZ_UIStr))
+                return EStationType.RP;
             throw new Exception("UIStrToStationType ERROR");
         }
         public static EStationType DBStrToStationType(string type)
@@ -543,6 +587,12 @@ namespace Hydrology.Entity
                 return EStationType.ESoilHydrology;
             else if (type.Equals(CS_EStationType_RiverHydro_DBStr))
                 return EStationType.EH;
+            else if (type.Equals(CS_EStationType_SK_DBStr))
+                return EStationType.RE;
+            else if (type.Equals(CS_EStationType_ZB_DBStr))
+                return EStationType.GT;
+            else if (type.Equals(CS_EStationType_BZ_DBStr))
+                return EStationType.RP;
             throw new Exception("DBStrToStationType ERROR");
         }
         public static string StationTypeToDBStr(EStationType type)
@@ -557,6 +607,9 @@ namespace Hydrology.Entity
                 case EStationType.ESoilWater: return CS_EStationType_ESoilWater_DBStr;
                 case EStationType.ESoilHydrology: return CS_EStationType_ESoilHydrology_DBStr;
                 case EStationType.EH: return CS_EStationType_RiverHydro_DBStr;
+                case EStationType.RE: return CS_EStationType_SK_DBStr;
+                case EStationType.GT: return CS_EStationType_ZB_DBStr;
+                case EStationType.RP: return CS_EStationType_BZ_DBStr;
             }
             throw new Exception("StationTypeToDBStr ERROR");
         }

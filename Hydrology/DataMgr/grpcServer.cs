@@ -17,40 +17,26 @@ using System.Xml;
 
 namespace Hydrology.DataMgr
 {
-    public class grpcServer : gRPCServices.gRPCServicesBase
+    public class GrpcServer : gRPCServices.gRPCServicesBase
     {
         private string gprsNum;
         private string stationId;
         private string cmds;
-        private bool isSet;
         private string grpcIp;
         private int grpcPort;
         bool downdataGet = false;
         bool timeDown = false;
         bool timeDown_1 = false;
-        //bool notOL = false;
 
-        readonly object myLock = new object();
-        readonly Dictionary<BatchRequest, List<BatchData>> batchTrans = new Dictionary<BatchRequest, List<BatchData>>();
-        private BatchMsg batchMsg;
+        private BatchList BatchList;
         private List<DownConf> downConfList;
-        private List<BatchData> batchList;
-        public List<BatchData> GetBatchList
-        {
-            get
-            {
-                if (batchList == null)
-                {
-                    batchList = new List<BatchData>();
-                }
-                return batchList;
-            }
-        }
+        private List<string> truReturnList;
+        private CDictionary<string, string> readDataDic;
 
         private System.Timers.Timer m_timer = new System.Timers.Timer()
         {
             Enabled = true,
-            Interval = 10 * 1000
+            Interval = 15 * 1000
         };
 
         private System.Timers.Timer m_timer_1 = new System.Timers.Timer()
@@ -59,13 +45,13 @@ namespace Hydrology.DataMgr
             Interval = 30 * 1000
         };
 
-        private static grpcServer instance;
-        public static grpcServer Instance
+        private static GrpcServer instance;
+        public static GrpcServer Instance
         {
             get
             {
                 if (instance == null)
-                    instance = new grpcServer();
+                    instance = new GrpcServer();
                 return instance;
             }
         }
@@ -113,15 +99,12 @@ namespace Hydrology.DataMgr
                 m_timer.Stop();
                 m_timer_1.Elapsed += new ElapsedEventHandler(TimeElapsed_1);
                 m_timer_1.Stop();
-                CProtocolEventManager.DownForData += this.DownData_EventHandler;
-                CProtocolEventManager.ErrorForData += this.ErrorData_EventHandler;
-                CProtocolEventManager.BatchForData += this.BatchForData_EventHandler;
 
                 //server.ShutdownAsync().Wait();
 
                 CSystemInfoMgr.Instance.AddInfo(string.Format("配置...grpcServer...完成!"));
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 CSystemInfoMgr.Instance.AddInfo(string.Format("配置...grpcServer...失败!"));
             }
@@ -130,9 +113,6 @@ namespace Hydrology.DataMgr
         public void StopGrpcServer()
         {
             this.downConfList = null;
-            CProtocolEventManager.DownForData -= this.DownData_EventHandler;
-            CProtocolEventManager.ErrorForData -= this.ErrorData_EventHandler;
-            CProtocolEventManager.BatchForData -= this.BatchForData_EventHandler;
             instance = null;
         }
 
@@ -162,7 +142,7 @@ namespace Hydrology.DataMgr
         /// <param name="DownRequest"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<DownConf> GetFeature(DownRequest DownRequest, ServerCallContext context)
+        public override Task<DownConf> GetDownConf(DownRequest DownRequest, ServerCallContext context)
         {
             return Task.FromResult(GetDownConf(DownRequest));
         }
@@ -174,6 +154,8 @@ namespace Hydrology.DataMgr
         /// <returns></returns>
         private DownConf GetDownConf(DownRequest DownRequest)
         {
+            CProtocolEventManager.DownForData += this.DownForData_EventHandler;
+            CProtocolEventManager.DownForTru += this.DownForTru_EventHandler;
             m_timer.Start();
             DownConf result = new DownConf();
             downConfList = null;
@@ -183,7 +165,7 @@ namespace Hydrology.DataMgr
             gprsNum = DownRequest.GprsNum;
             stationId = DownRequest.StationId;
             cmds = DownRequest.Cmds;
-            isSet = DownRequest.IsSet;
+            bool isSet = DownRequest.IsSet;
 
             if (isSet == false)
             {
@@ -271,22 +253,17 @@ namespace Hydrology.DataMgr
 
             m_timer.Stop();
 
+            CProtocolEventManager.DownForData -= this.DownForData_EventHandler;
+            CProtocolEventManager.DownForTru -= this.DownForTru_EventHandler;
             return result;
         }
-
-
-
-        //private void StationNotOL_EventHandler(object sender, DownEventArgs e)
-        //{
-        //    if(!notOL) notOL = true;
-        //}
 
         /// <summary>
         /// 上行数据处理程序
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DownData_EventHandler(object sender, DownEventArgs e)
+        private void DownForData_EventHandler(object sender, DownEventArgs e)
         {
             try
             {
@@ -406,9 +383,9 @@ namespace Hydrology.DataMgr
                 {
                     downConf.Rain = (double)info.Rain;
                 }
-                if (info.Water.HasValue)
+                if (info.StorageWater.HasValue)
                 {
-                    downConf.Water = (double)info.Water;
+                    downConf.Water = (double)info.StorageWater;
                 }
                 if (info.WaterPlusReportedValue.HasValue)
                 {
@@ -439,7 +416,7 @@ namespace Hydrology.DataMgr
             }
         }
 
-        private void ErrorData_EventHandler(object sender, ReceiveErrorEventArgs e)
+        private void DownForTru_EventHandler(object sender, ReceiveErrorEventArgs e)
         {
             try
             {
@@ -490,127 +467,44 @@ namespace Hydrology.DataMgr
         #endregion
 
         #region 批量传输
-        public override async Task ListBatchData(BatchRequest request, IServerStreamWriter<BatchData> responseStream, ServerCallContext context)
+        public override Task<BatchList> ListBatchData(BatchRequest request, ServerCallContext context)
         {
-            List<BatchData> batchLists = GetBatchData(request);
-            foreach (var batchData in batchLists)
-            {
-                await responseStream.WriteAsync(batchData);
-            }
+            return Task.FromResult(GetBatchList(request));
         }
 
-        public override Task<BatchMsg> GetBatchMsg(BatchRequest request, ServerCallContext context)
+        private BatchList GetBatchList(BatchRequest request)
         {
-            return Task.FromResult(GetBatchMsg(request));
-        }
-
-        private BatchMsg GetBatchMsg(BatchRequest request)
-        {
+            CProtocolEventManager.BatchForData += this.BatchForData_EventHandler;
             m_timer_1.Start();
-            SendBatchMsg(request);
-            if (batchMsg.NotOL != false)
+            SendBatchReport(request);
+            if (BatchList.IsOL == false)
             {
-                m_timer.Stop();
-                return batchMsg;
+                m_timer_1.Stop();
+                return BatchList;
             }
             while (true)
             {
-                if (batchMsg.Msg != "")
+                if (BatchList.Bdata.Count != 0)
                 {
                     break;
                 }
                 Thread.Sleep(1000);
                 if (timeDown_1)
                 {
-                    batchMsg = new BatchMsg() { TimeOut = true };
+                    BatchList.NotTimeOut = false;
                     timeDown_1 = false;
                     break;
                 }
             }
             m_timer_1.Stop();
-            return batchMsg;
+            CProtocolEventManager.BatchForData -= this.BatchForData_EventHandler;
+            return BatchList;
         }
 
-        private List<BatchData> GetBatchData(BatchRequest batchRequest)
+        private void SendBatchReport(BatchRequest request)
         {
-            lock (myLock)
-            {
-                List<BatchData> datas = new List<BatchData>();
-                m_timer_1.Start();
-                SendBatchMsg(batchRequest);
-                if (this.batchList.Count() != 0)
-                {
-                    if (this.batchList.First().NotOL == true)
-                    {
-                        m_timer_1.Stop();
-                        return this.GetBatchList;
-                    }
-                    else
-                    {
-                        datas = CheckBatchData(batchRequest, this.batchList);
-                        return datas;
-                    }
-                }
-                else
-                {
-                    // 此处获取datas
-                    while (true)
-                    {
-                        datas = CheckBatchData(batchRequest, this.batchList);
-                        if (datas.Count() != 0)
-                        {
-                            break;
-                        }
-                        Thread.Sleep(1000);
-                        if (timeDown_1)
-                        {
-                            timeDown_1 = false;
-                            break;
-                        }
-                    }
-                }
-                m_timer_1.Stop();
-                if (datas.Count() == 0)
-                {
-                    BatchData error = new BatchData();
-                    error.StationId = batchRequest.StationId;
-                    error.TimeOut = true;
-                    datas.Add(error);
-                    BatchData endInfo = new BatchData();
-                    endInfo.StationId = endInfo.StationId;
-                    endInfo.End = true;
-                    datas.Add(endInfo);
-                }
-                return datas;
-
-            }
-        }
-
-        private List<BatchData> CheckBatchData(BatchRequest request, List<BatchData> batchDatas)
-        {
-            List<BatchData> checkedbatchList = new List<BatchData>();
-            int i = 0;
-            if (batchDatas.Count() == 0)
-            {
-                return checkedbatchList;
-            }
-            foreach (var v in batchDatas)
-            {
-                i++;
-                checkedbatchList.Add(v);
-                if (v.End == true && v.StationId == request.StationId)
-                {
-                    break;
-                }
-            }
-            GetBatchList.RemoveRange(0, i);
-            return checkedbatchList;
-        }
-        private void SendBatchMsg(BatchRequest request)
-        {
-            this.batchMsg = null;
-            this.batchMsg = new BatchMsg() { };
-            this.batchList = new List<BatchData>();
+            BatchList = null;
+            BatchList = new BatchList() { StationId = request.StationId, TType = request.TransType == true ? BatchList.Types.transType.Byday : BatchList.Types.transType.Byhour, IsOL = true };
             EStationType stype = request.ReportType == true ? EStationType.ERainFall : EStationType.EHydrology;
             ETrans trans = request.TransType == true ? ETrans.ByDay : ETrans.ByHour;
             DateTime st = Convert.ToDateTime(request.StartTime);
@@ -673,15 +567,7 @@ namespace Hydrology.DataMgr
             }
             else
             {
-                batchMsg = new BatchMsg() { NotOL = true };
-                BatchData error = new BatchData();
-                error.StationId = request.StationId;
-                error.NotOL = true;
-                this.batchList.Add(error);
-                BatchData endInfo = new BatchData();
-                endInfo.StationId = endInfo.StationId;
-                endInfo.End = true;
-                this.batchList.Add(endInfo);
+                BatchList.IsOL = false;
             }
         }
 
@@ -689,34 +575,29 @@ namespace Hydrology.DataMgr
         {
             try
             {
-                batchMsg = new BatchMsg() { Msg = e.RawData };
                 CBatchStruct info = e.Value;
                 if (info == null)
                     return;
-                BatchData batchInfo = new BatchData();
-                batchInfo.StationId = info.StationID;
+                if (BatchList.Bdata.Count != 0 && info.StationID == BatchList.StationId)
+                    return;
+                BatchList.RawInfo = e.RawData;
                 if (info.StationType == EStationType.ERainFall)
                 {
-                    batchInfo.StationType = true;
+                    BatchList.SType = BatchList.Types.stationType.RainStation;
                 }
-                else
+                else if (info.StationType == EStationType.ERiverWater)
                 {
-                    batchInfo.StationType = false;
+                    BatchList.SType = BatchList.Types.stationType.WaterStation;
                 }
-                this.GetBatchList.Add(batchInfo);
 
                 foreach (var v in info.Datas)
                 {
                     BatchData dataInfo = new BatchData();
-                    dataInfo.Time = v.Time.ToString();
-                    dataInfo.Data = v.Data;
-                    this.GetBatchList.Add(dataInfo);
+                    dataInfo.BatchTime = v.Time.ToString();
+                    dataInfo.BatchValue = v.Data;
+                    BatchList.Bdata.Add(dataInfo);
                 }
 
-                BatchData endInfo = new BatchData();
-                endInfo.StationId = endInfo.StationId;
-                endInfo.End = true;
-                this.GetBatchList.Add(endInfo);
             }
             catch (Exception exp)
             {
@@ -724,9 +605,30 @@ namespace Hydrology.DataMgr
             }
         }
 
+        #region 刷新站点信息
+        /// <summary>
+        /// 刷新站点信息
+        /// </summary>
+        /// <param name="station"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<boolResult> RefreshStation(RpcStation station, ServerCallContext context)
+        {
+            return Task.FromResult(FreshStation(station));
+        }
+        private boolResult FreshStation(RpcStation station)
+        {
+            boolResult result = new boolResult();
+            CDBDataMgr.Instance.UpdateAllStation();
+            result.Flag = true;
+            return result;
+        }
+        #endregion
+
         #endregion
 
         #region 获取在线列表
+
 
         public override Task<DtuList> GetDtuList(Subcenter subcenter, ServerCallContext context)
         {
@@ -739,21 +641,30 @@ namespace Hydrology.DataMgr
 
             List<ModemInfoStruct> stateList = new List<ModemInfoStruct>();
             List<CEntityStation> stations = new List<CEntityStation>();
-            List<CEntitySoilStation> soilStations = new List<CEntitySoilStation>();
+            //List<CEntitySoilStation> soilStations = new List<CEntitySoilStation>();
             List<CEntitySubCenter> subCenters = new List<CEntitySubCenter>();
             Dictionary<string, ModemInfoStruct> gprsDic = new Dictionary<string, ModemInfoStruct>();
 
             stateList = Clone<ModemInfoStruct>(CProtocolEventManager.Instance.GetOnlineStatusList());
             stations = CDBDataMgr.Instance.GetAllStation();
-            soilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
+            //soilStations = CDBSoilDataMgr.Instance.GetAllSoilStation();
             subCenters = CDBDataMgr.Instance.GetAllSubCenter();
 
             if (stateList.Count() != 0)
             {
                 for (int i = 0; i < stateList.Count(); i++)
                 {
-                    string uid = ((uint)stateList[i].m_modemId).ToString("X").PadLeft(8, '0');
-                    gprsDic.Add(uid, stateList[i]);
+
+                    if(stateList[i].m_modemId != 0)
+                    {
+                        string uid = stateList[i].m_modemId.ToString();
+                        for(int j = uid.Length; j < 10; j++)
+                        {
+                            uid = "0" + uid;
+                        }
+                        gprsDic.Add(uid, stateList[i]);
+                    }
+                    
                 }
             }
 
@@ -763,16 +674,20 @@ namespace Hydrology.DataMgr
                 {
                     if (gprsDic.Count() != 0)
                     {
-                        if (gprsDic.ContainsKey(s.GPRS))
+                        if (gprsDic.ContainsKey(s.StationID))
                         {
                             Dtu dtu = new Dtu();
 
-                            ModemInfoStruct state = gprsDic[s.GPRS];
-                            string phoneno = CGprsUtil.Byte11ToPhoneNO(state.m_phoneno, 0);
+                            ModemInfoStruct state = gprsDic[s.StationID];
+                            string phoneno = "--";
+                            if (state.m_phoneno != null)
+                            {
+                                phoneno = CGprsUtil.Byte11ToPhoneNO(state.m_phoneno, 0);
+                            }
                             string dynIP = CGprsUtil.Byte4ToIP(state.m_dynip, 0);
                             string connectTime = CGprsUtil.ULongToDatetime(state.m_conn_time).ToString();
                             string refreshTime = CGprsUtil.ULongToDatetime(state.m_refresh_time).ToString();
-                            
+
                             dtu.SubcenterId = s.SubCenterID.ToString();
                             string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
                             dtu.SubcenterName = subName;
@@ -796,7 +711,7 @@ namespace Hydrology.DataMgr
                         dtu.SubcenterName = subName;
                         dtu.StationId = s.StationID;
                         dtu.StationName = s.StationName;
-                        dtu.GprsId = s.GPRS;
+                        dtu.GprsId = s.StationID;
                         dtu.State = "2";
                         dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
                         dtuList.Dtu.Add(dtu);
@@ -804,101 +719,101 @@ namespace Hydrology.DataMgr
                 }
             }
 
-            foreach (var s in stations)
-            {
-                if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
-                {
-                    if (gprsDic.Count() != 0)
-                    {
-                        if (!gprsDic.ContainsKey(s.GPRS))
-                        {
-                            Dtu dtu = new Dtu();
-                            dtu.SubcenterId = s.SubCenterID.ToString();
-                            string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
-                            dtu.SubcenterName = subName;
-                            dtu.StationId = s.StationID;
-                            dtu.StationName = s.StationName;
-                            dtu.GprsId = s.GPRS;
-                            dtu.State = "2";
-                            dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
-                            dtuList.Dtu.Add(dtu);
-                        }
-                    }
-                }
-            }
+            //foreach (var s in stations)
+            //{
+            //    if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
+            //    {
+            //        if (gprsDic.Count() != 0)
+            //        {
+            //            if (!gprsDic.ContainsKey(s.GPRS))
+            //            {
+            //                Dtu dtu = new Dtu();
+            //                dtu.SubcenterId = s.SubCenterID.ToString();
+            //                string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
+            //                dtu.SubcenterName = subName;
+            //                dtu.StationId = s.StationID;
+            //                dtu.StationName = s.StationName;
+            //                dtu.GprsId = s.GPRS;
+            //                dtu.State = "2";
+            //                dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
+            //                dtuList.Dtu.Add(dtu);
+            //            }
+            //        }
+            //    }
+            //}
 
-            foreach (var s in soilStations)
-            {
-                if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
-                {
-                    if (gprsDic.Count() != 0)
-                    {
-                        if (gprsDic.ContainsKey(s.GPRS))
-                        {
-                            Dtu dtu = new Dtu();
+            //foreach (var s in soilStations)
+            //{
+            //    if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
+            //    {
+            //        if (gprsDic.Count() != 0)
+            //        {
+            //            if (gprsDic.ContainsKey(s.GPRS))
+            //            {
+            //                Dtu dtu = new Dtu();
 
-                            ModemInfoStruct state = gprsDic[s.GPRS];
-                            string phoneno = CGprsUtil.Byte11ToPhoneNO(state.m_phoneno, 0);
-                            string dynIP = CGprsUtil.Byte4ToIP(state.m_dynip, 0);
-                            string connectTime = CGprsUtil.ULongToDatetime(state.m_conn_time).ToString();
-                            string refreshTime = CGprsUtil.ULongToDatetime(state.m_refresh_time).ToString();
+            //                ModemInfoStruct state = gprsDic[s.GPRS];
+            //                string phoneno = CGprsUtil.Byte11ToPhoneNO(state.m_phoneno, 0);
+            //                string dynIP = CGprsUtil.Byte4ToIP(state.m_dynip, 0);
+            //                string connectTime = CGprsUtil.ULongToDatetime(state.m_conn_time).ToString();
+            //                string refreshTime = CGprsUtil.ULongToDatetime(state.m_refresh_time).ToString();
 
-                            if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
-                            {
-                                dtu.SubcenterId = s.SubCenterID.ToString();
-                                string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
-                                dtu.SubcenterName = subName;
-                                dtu.StationId = s.StationID;
-                                dtu.StationName = s.StationName;
-                                dtu.GprsId = s.GPRS;
-                                dtu.GsmNum = phoneno;
-                                dtu.IpAddr = dynIP;
-                                dtu.ConnTime = connectTime;
-                                dtu.RefreshTime = refreshTime;
-                                dtu.State = "1";
-                                dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
-                                dtuList.Dtu.Add(dtu);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Dtu dtu = new Dtu();
-                        dtu.SubcenterId = s.SubCenterID.ToString();
-                        string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
-                        dtu.SubcenterName = subName;
-                        dtu.StationId = s.StationID;
-                        dtu.StationName = s.StationName;
-                        dtu.GprsId = s.GPRS;
-                        dtu.State = "2";
-                        dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
-                        dtuList.Dtu.Add(dtu);
-                    }
-                }
-            }
+            //                if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
+            //                {
+            //                    dtu.SubcenterId = s.SubCenterID.ToString();
+            //                    string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
+            //                    dtu.SubcenterName = subName;
+            //                    dtu.StationId = s.StationID;
+            //                    dtu.StationName = s.StationName;
+            //                    dtu.GprsId = s.GPRS;
+            //                    dtu.GsmNum = phoneno;
+            //                    dtu.IpAddr = dynIP;
+            //                    dtu.ConnTime = connectTime;
+            //                    dtu.RefreshTime = refreshTime;
+            //                    dtu.State = "1";
+            //                    dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
+            //                    dtuList.Dtu.Add(dtu);
+            //                }
+            //            }
+            //        }
+            //        else
+            //        {
+            //            Dtu dtu = new Dtu();
+            //            dtu.SubcenterId = s.SubCenterID.ToString();
+            //            string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
+            //            dtu.SubcenterName = subName;
+            //            dtu.StationId = s.StationID;
+            //            dtu.StationName = s.StationName;
+            //            dtu.GprsId = s.GPRS;
+            //            dtu.State = "2";
+            //            dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
+            //            dtuList.Dtu.Add(dtu);
+            //        }
+            //    }
+            //}
 
-            foreach (var s in soilStations)
-            {
-                if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
-                {
-                    if (gprsDic.Count() != 0)
-                    {
-                        if (!gprsDic.ContainsKey(s.GPRS))
-                        {
-                            Dtu dtu = new Dtu();
-                            dtu.SubcenterId = s.SubCenterID.ToString();
-                            string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
-                            dtu.SubcenterName = subName;
-                            dtu.StationId = s.StationID;
-                            dtu.StationName = s.StationName;
-                            dtu.GprsId = s.GPRS;
-                            dtu.State = "2";
-                            dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
-                            dtuList.Dtu.Add(dtu);
-                        }
-                    }
-                }
-            }
+            //foreach (var s in soilStations)
+            //{
+            //    if (subcenter.SubcenterdId == s.SubCenterID.ToString() || subcenter.SubcenterdId == "0")
+            //    {
+            //        if (gprsDic.Count() != 0)
+            //        {
+            //            if (!gprsDic.ContainsKey(s.GPRS))
+            //            {
+            //                Dtu dtu = new Dtu();
+            //                dtu.SubcenterId = s.SubCenterID.ToString();
+            //                string subName = CDBDataMgr.Instance.GetSubCenterName(s.SubCenterID.ToString());
+            //                dtu.SubcenterName = subName;
+            //                dtu.StationId = s.StationID;
+            //                dtu.StationName = s.StationName;
+            //                dtu.GprsId = s.GPRS;
+            //                dtu.State = "2";
+            //                dtu.StationType = CEnumHelper.StationTypeToDBStr(s.StationType);
+            //                dtuList.Dtu.Add(dtu);
+            //            }
+            //        }
+            //    }
+            //}
 
             return dtuList;
         }
@@ -906,16 +821,253 @@ namespace Hydrology.DataMgr
         #endregion
 
         #region 批量对时
-        //public override Task<TruList> BatchTime(StationList list, ServerCallContext context)
-        //{
-        //    return Task.FromResult(BatchTime(list));
-        //}
+        public override Task<TruList> BatchTime(StationList list, ServerCallContext context)
+        {
+            return Task.FromResult(BatchTime(list));
+        }
 
-        //public TruList BatchTime(StationList list)
-        //{
-        //    return null;
-        //}
+        public TruList BatchTime(StationList list)
+        {
+            CProtocolEventManager.DownForTru += BatchForTru_EventHandler;
+            truReturnList = new List<string>();
+            TruList truList = new TruList();
 
+            m_timer_1.Start();
+
+            foreach (var id in list.Ids)
+            {
+                CEntityStation station = CDBDataMgr.Instance.GetStationById(id);
+                CPortDataMgr.Instance.SendAdjustClock(station);
+            }
+
+
+            while (true)
+            {
+                // 等待
+                if (timeDown_1)
+                {
+                    foreach (var id in list.Ids)
+                    {
+                        if (this.truReturnList.Contains(id))
+                        {
+                            truList.TruData.Add(new TruData() { StationId = id, Tru = true });
+                        }
+                        else
+                        {
+                            truList.TruData.Add(new TruData() { StationId = id, Tru = false });
+                        }
+                    }
+                    break;
+                }
+            }
+
+            m_timer_1.Stop();
+            CProtocolEventManager.DownForTru -= DownForTru_EventHandler;
+            return truList;
+        }
+
+        private void BatchForTru_EventHandler(object sender, ReceiveErrorEventArgs e)
+        {
+            string msg = e.Msg;
+            try
+            {
+                if (msg.Contains("TRU"))
+                {
+                    string[] str = msg.Split(' ');
+                    string str1 = str[1];
+                    string sid = CDBDataMgr.Instance.GetStationIDByGprs(str1);
+                    if (sid != null)
+                    {
+                        truReturnList.Add(sid);
+                    }
+                }
+            }
+            catch (Exception exp) { Debug.WriteLine(exp.Message); }
+
+        }
+
+        #endregion
+
+        #region 批量读取
+        public override Task<ReadDatas> BatchRead(ReadRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(GetReadDatas(request));
+        }
+
+        public ReadDatas GetReadDatas(ReadRequest request)
+        {
+            readDataDic = new CDictionary<string, string>();
+            ReadDatas readDatas = new ReadDatas();
+            m_timer_1.Start();
+
+            if (request.RType == ReadRequest.Types.readType.ReadStoredWater)
+            {
+                CProtocolEventManager.DownForData += ReadForData_EventHandler_1;
+                foreach (var id in request.SList.Ids)
+                {
+                    CEntityStation station = CDBDataMgr.Instance.GetStationById(id);
+                    CPortDataMgr.Instance.GroupStorageWaterFirst(station);
+                }
+            }
+            else if (request.RType == ReadRequest.Types.readType.ReadRealWater)
+            {
+                CProtocolEventManager.DownForData += ReadForData_EventHandler_2;
+                foreach (var id in request.SList.Ids)
+                {
+                    CEntityStation station = CDBDataMgr.Instance.GetStationById(id);
+                    CPortDataMgr.Instance.GroupRealityWater(station);
+                }
+            }
+            else if (request.RType == ReadRequest.Types.readType.ReadRain)
+            {
+                CProtocolEventManager.DownForData += ReadForData_EventHandler_3;
+                foreach (var id in request.SList.Ids)
+                {
+                    CEntityStation station = CDBDataMgr.Instance.GetStationById(id);
+                    CPortDataMgr.Instance.GroupRainWater(station);
+                }
+            }
+            //else if (request.RType == ReadRequest.Types.readType.ReadSoil)
+            //{
+            //    foreach (var id in request.SList.Ids)
+            //    {
+            //        CEntityStation station = CDBDataMgr.Instance.GetStationById(id);
+            //        CPortDataMgr.Instance.GroupSoilWater(station);
+            //    }
+            //}
+
+            //等待读取完成
+            while (true)
+            {
+                // 等待
+                if (timeDown_1)
+                {
+                    foreach (var id in request.SList.Ids)
+                    {
+                        if (readDataDic.ContainsKey(id))
+                        {
+                            readDatas.RData.Add(new ReadData() { StationId = id, Data = readDataDic[id] });
+                        }
+                        else
+                        {
+                            readDatas.RData.Add(new ReadData() { StationId = id, Data = "" });
+                        }
+                    }
+                    break;
+                }
+            }
+
+            m_timer_1.Stop();
+
+            CProtocolEventManager.DownForData -= ReadForData_EventHandler_1;
+            CProtocolEventManager.DownForData -= ReadForData_EventHandler_2;
+            CProtocolEventManager.DownForData -= ReadForData_EventHandler_3;
+            return readDatas;
+        }
+
+        private void ReadForData_EventHandler_1(object sender, DownEventArgs e)
+        {
+            try
+            {
+                CDownConf info = e.Value;
+                //$60031G12000828
+                string rawData = e.RawData;
+                if (info == null)
+                    return;
+                string stationid = rawData.Substring(1, 4);
+                string type = rawData.Substring(5, 4);
+                string data = rawData.Substring(9, 6);
+                if (type == "1G12")
+                {
+                    if (info.StorageWater.HasValue)
+                    {
+                        if (readDataDic.ContainsKey(stationid))
+                        {
+                            readDataDic[stationid] = data;
+                        }
+                        readDataDic.Add(stationid, data);
+                    }
+                }
+            }
+            catch (Exception exp) { Debug.WriteLine(exp.Message); }
+        }
+        private void ReadForData_EventHandler_2(object sender, DownEventArgs e)
+        {
+            try
+            {
+                CDownConf info = e.Value;
+                //$60031G12000828
+                //$60121G020845
+                string rawData = e.RawData;
+                if (info == null)
+                    return;
+                string stationid = rawData.Substring(1, 4);
+                string type = rawData.Substring(5, 4);
+                string data = rawData.Substring(9, 4);
+                if (type == "1G13")
+                {
+                    if (info.RealWater.HasValue)
+                    {
+                        if (readDataDic.ContainsKey(stationid))
+                        {
+                            readDataDic[stationid] = data;
+                        }
+                        readDataDic.Add(stationid, data);
+                    }
+                }
+            }
+            catch (Exception exp) { Debug.WriteLine(exp.Message); }
+        }
+        private void ReadForData_EventHandler_3(object sender, DownEventArgs e)
+        {
+            try
+            {
+                CDownConf info = e.Value;
+                //$60031G12000828
+                //$60121G020845
+                string rawData = e.RawData;
+                if (info == null)
+                    return;
+                string stationid = rawData.Substring(1, 4);
+                string type = rawData.Substring(5, 4);
+                string data = rawData.Substring(9, 4);
+                if (type == "1G02")
+                {
+                    if (info.Rain.HasValue)
+                    {
+                        if (readDataDic.ContainsKey(stationid))
+                        {
+                            readDataDic[stationid] = data;
+                        }
+                        readDataDic.Add(stationid, data);
+                    }
+                }
+            }
+            catch (Exception exp) { Debug.WriteLine(exp.Message); }
+        }
+        //private void ReadForData_EventHandler_4(object sender, DownEventArgs e)
+        //{
+        //    try
+        //    {
+        //        CDownConf info = e.Value;
+        //        //$60031G12000828
+        //        //$60121G020845
+        //        string rawData = e.RawData;
+        //        if (info == null)
+        //            return;
+        //        string stationid = rawData.Substring(1, 4);
+        //        string type = rawData.Substring(5, 4);
+        //        string data = rawData.Substring(9, 4);
+        //        if (type == "1G25")
+        //        {
+        //            if (info.Rain.HasValue)
+        //            {
+        //                readDataDic.Add(stationid, data);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+        //}
         #endregion
     }
 }

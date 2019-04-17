@@ -37,7 +37,6 @@
             this.panel3 = new System.Windows.Forms.Panel();
             this.radioWater = new System.Windows.Forms.RadioButton();
             this.radioRain = new System.Windows.Forms.RadioButton();
-            this.label1 = new System.Windows.Forms.Label();
             this.dtp_EndTime = new System.Windows.Forms.DateTimePicker();
             this.dtp_StartTime = new System.Windows.Forms.DateTimePicker();
             this.radioDay = new System.Windows.Forms.RadioButton();
@@ -48,11 +47,11 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.radioButton2 = new System.Windows.Forms.RadioButton();
+            this.radioButtonSave = new System.Windows.Forms.RadioButton();
             this.btnClear = new System.Windows.Forms.Button();
             this.btnStartTrans = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
-            this.radioButtonSave = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -132,7 +131,6 @@
             // 
             this.panel3.Controls.Add(this.radioWater);
             this.panel3.Controls.Add(this.radioRain);
-            this.panel3.Controls.Add(this.label1);
             this.panel3.Location = new System.Drawing.Point(49, 50);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(290, 29);
@@ -159,15 +157,6 @@
             this.radioRain.TabIndex = 11;
             this.radioRain.Text = "雨量";
             this.radioRain.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(24, 8);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(41, 12);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "报类：";
             // 
             // dtp_EndTime
             // 
@@ -265,6 +254,28 @@
             this.panel2.Size = new System.Drawing.Size(428, 29);
             this.panel2.TabIndex = 7;
             // 
+            // radioButton2
+            // 
+            this.radioButton2.AutoSize = true;
+            this.radioButton2.Location = new System.Drawing.Point(334, 10);
+            this.radioButton2.Name = "radioButton2";
+            this.radioButton2.Size = new System.Drawing.Size(47, 16);
+            this.radioButton2.TabIndex = 12;
+            this.radioButton2.TabStop = true;
+            this.radioButton2.Text = "存库";
+            this.radioButton2.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonSave
+            // 
+            this.radioButtonSave.AutoSize = true;
+            this.radioButtonSave.Location = new System.Drawing.Point(269, 10);
+            this.radioButtonSave.Name = "radioButtonSave";
+            this.radioButtonSave.Size = new System.Drawing.Size(59, 16);
+            this.radioButtonSave.TabIndex = 11;
+            this.radioButtonSave.TabStop = true;
+            this.radioButtonSave.Text = "存文本";
+            this.radioButtonSave.UseVisualStyleBackColor = true;
+            // 
             // btnClear
             // 
             this.btnClear.Location = new System.Drawing.Point(26, 3);
@@ -294,29 +305,6 @@
             this.btnExit.Text = "退出";
             this.btnExit.UseVisualStyleBackColor = true;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
-            // 
-            // radioButtonSave
-            // 
-            this.radioButtonSave.AutoSize = true;
-            
-            this.radioButtonSave.Location = new System.Drawing.Point(269, 10);
-            this.radioButtonSave.Name = "radioButtonSave";
-            this.radioButtonSave.Size = new System.Drawing.Size(59, 16);
-            this.radioButtonSave.TabIndex = 11;
-            this.radioButtonSave.TabStop = true;
-            this.radioButtonSave.Text = "存文本";
-            this.radioButtonSave.UseVisualStyleBackColor = true;
-            // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(334, 10);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(47, 16);
-            this.radioButton2.TabIndex = 12;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "存库";
-            this.radioButton2.UseVisualStyleBackColor = true;
             // 
             // CBatchFlashMgrForm
             // 
@@ -364,7 +352,6 @@
         private System.Windows.Forms.ComboBox cmbStation;
         private System.Windows.Forms.RadioButton radioRain;
         private System.Windows.Forms.RadioButton radioWater;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButtonSave;

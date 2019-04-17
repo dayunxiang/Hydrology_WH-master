@@ -13,7 +13,7 @@ namespace Hydrology.Forms
     public partial class CReadAndSettingMgrForm : Form
     {
         private EReadOrSetStatus m_RSStatus = EReadOrSetStatus.None;
-        private EChannelType m_channelType = EChannelType.GPRS;
+        private EChannelType m_channelType = EChannelType.TCP;
         private List<string> m_vNormalStateLists = new List<string>();
         private List<string> m_vWorkStatusLists = new List<string>();
         private List<int> m_vTimePeriodLists = new List<int>();
@@ -70,8 +70,8 @@ namespace Hydrology.Forms
             //  初始化通讯方式列表
             var msgLists = new List<String>()
             {
-                EChannelType.GPRS.ToString(),
-                EChannelType.GSM.ToString(),
+                //EChannelType.GPRS.ToString(),
+                //EChannelType.GSM.ToString(),
                 EChannelType.TCP.ToString(),
                 //EChannelType.BeiDou.ToString(),
                 //EChannelType.PSTN.ToString()
@@ -161,17 +161,17 @@ namespace Hydrology.Forms
             //  初始化终端机号
             this.vTerminalNum.Text = string.Empty;
             //  初始化响应波束
-            this.vRespBeam.Text = string.Empty;
+            this.ICset.Text = string.Empty;
             //  初始化振铃次数
             this.vRingsNum.Value = 1;
 
             /************工作配置*****************/
             //  初始化测站类型
-            this.vStationType.Text = string.Empty;
+            //this.vStationType.Text = string.Empty;
             //  初始化水位
-            this.vWater.Value = 0;
+            //this.vWater.Value = 0;
             //  初始化雨量
-            this.vRain.Value = 0;
+            //this.vRain.Value = 0;
             //  初始化水位加报值
             this.vWaterPlusReportedValue.Value = 0;
             //  初始化雨量加报值
@@ -245,351 +245,538 @@ namespace Hydrology.Forms
         {
             try
             {
-                CDownConf info = e.Value;
+                CReportData  info = e.rpValue.Datas[0];
                 string rawData = e.RawData;
                 if (info == null)
                     return;
                 if (this.IsHandleCreated)
                 {
                     #region 更新UI
-                    if (info.Clock.HasValue)
-                    {
-                        try
-                        {
-                            this.vClock.Invoke((Action)delegate
-                            {
-                                this.vClock.Value = info.Clock.Value;
-                                this.label19.Show();
-                                //HighlightControl(this.vClock);
-                                //this.vClock.BackColor = Color.Red;                             
-                                //this.vClock.CalendarForeColor = Color.Red;
-                                //this.vClock.CalendarMonthBackground = Color.Red;
-                                //this.vClock.CalendarTitleBackColor = Color.Red;
-                                //this.vClock.CalendarTrailingForeColor= Color.Red;
-                                this.vClock.Invalidate();
+                    //if (info.Datas.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vClock.Invoke((Action)delegate
+                    //        {
+                    //            this.vClock.Value = info.Clock.Value;
+                    //            this.label19.Show();
+                    //            //HighlightControl(this.vClock);
+                    //            //this.vClock.BackColor = Color.Red;                             
+                    //            //this.vClock.CalendarForeColor = Color.Red;
+                    //            //this.vClock.CalendarMonthBackground = Color.Red;
+                    //            //this.vClock.CalendarTitleBackColor = Color.Red;
+                    //            //this.vClock.CalendarTrailingForeColor= Color.Red;
+                    //            this.vClock.Invalidate();
 
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.NormalState.HasValue)
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.NormalState.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vNormalState.Invoke((Action)delegate
+                    //        {
+                    //            this.vNormalState.Text = ProtocolMaps.NormalState4UI.FindValue(info.NormalState.Value);
+                    //            HighlightControl(this.vNormalState);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.Voltage.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vVoltage.Invoke((Action)delegate
+                    //        {
+                    //            this.vVoltage.Value = info.Voltage.Value;
+                    //            HighlightControl(this.vVoltage);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.StationCmdID))
+                    //{
+                    //    try
+                    //    {
+                    //        this.vStationCmdID.Invoke((Action)delegate
+                    //        {
+                    //            this.vStationCmdID.Text = info.StationCmdID;
+                    //            HighlightControl(this.vStationCmdID);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.TimeChoice.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vTimeChoice.Invoke((Action)delegate
+                    //        {
+                    //            this.vTimeChoice.Text = ProtocolMaps.TimeChoice4UI.FindValue(info.TimeChoice.Value);
+                    //            HighlightControl(this.vTimeChoice);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.TimePeriod.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vTimePeriod.Invoke((Action)delegate
+                    //        {
+                    //            this.vTimePeriod.Text = Int32.Parse(ProtocolMaps.TimePeriodMap.FindValue(info.TimePeriod.Value)).ToString();
+                    //            HighlightControl(this.vTimePeriod);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //设备运行
+                    if (info.Alarm != null)
                     {
-                        try
+                        string normalState = info.Alarm.Substring(0, 3);
+                        string binaryStr = HexString2BinString(normalState);
+                        binaryStr.Replace(" ","");
+
+                        string ACState = string.Empty;
+                        string voltageState = string.Empty;
+                        string waterState = string.Empty;
+                        string flowState = string.Empty;
+                        string qualityState = string.Empty;
+                        string flowInsState = string.Empty;
+                        string waterInsState = string.Empty;
+                        string boxState = string.Empty;
+                        string memoryState = string.Empty;
+                        string ICState = string.Empty;
+                        string pumpState = string.Empty;
+                        string remianWaterState = string.Empty;
+                        for (int i = 0; i < binaryStr.Length-1; i++)
                         {
-                            this.vNormalState.Invoke((Action)delegate
+                            string flag = binaryStr.Substring(i, 1);
+                            if(i == 0)
                             {
-                                this.vNormalState.Text = ProtocolMaps.NormalState4UI.FindValue(info.NormalState.Value);
-                                HighlightControl(this.vNormalState);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.Voltage.HasValue)
-                    {
-                        try
-                        {
-                            this.vVoltage.Invoke((Action)delegate
+                                if(flag == "0")
+                                {
+                                    ACState = "正常";
+                                }
+                                else
+                                {
+                                    ACState = "停电";
+                                }
+                            }
+                            if (i == 1)
                             {
-                                this.vVoltage.Value = info.Voltage.Value;
-                                HighlightControl(this.vVoltage);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.StationCmdID))
-                    {
-                        try
-                        {
-                            this.vStationCmdID.Invoke((Action)delegate
+                                if (flag == "0")
+                                {
+                                    voltageState = "正常";
+                                }
+                                else
+                                {
+                                    voltageState = "电压低";
+                                }
+                            }
+                            if (i == 2)
                             {
-                                this.vStationCmdID.Text = info.StationCmdID;
-                                HighlightControl(this.vStationCmdID);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.TimeChoice.HasValue)
-                    {
-                        try
-                        {
-                            this.vTimeChoice.Invoke((Action)delegate
+                                if (flag == "0")
+                                {
+                                    waterState = "正常";
+                                }
+                                else
+                                {
+                                    waterState = "报警";
+                                }
+                            }
+                            if (i == 3)
                             {
-                                this.vTimeChoice.Text = ProtocolMaps.TimeChoice4UI.FindValue(info.TimeChoice.Value);
-                                HighlightControl(this.vTimeChoice);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.TimePeriod.HasValue)
-                    {
-                        try
-                        {
-                            this.vTimePeriod.Invoke((Action)delegate
+                                if (flag == "0")
+                                {
+                                    flowState = "正常";
+                                }
+                                else
+                                {
+                                    flowState = "报警";
+                                }
+                            }
+                            if (i == 4)
                             {
-                                this.vTimePeriod.Text = Int32.Parse(ProtocolMaps.TimePeriodMap.FindValue(info.TimePeriod.Value)).ToString();
-                                HighlightControl(this.vTimePeriod);
-                            });
+                                if (flag == "0")
+                                {
+                                    qualityState = "正常";
+                                }
+                                else
+                                {
+                                    qualityState = "报警";
+                                }
+                            }
+                            if (i == 5)
+                            {
+                                if (flag == "0")
+                                {
+                                    flowInsState = "正常";
+                                }
+                                else
+                                {
+                                    flowInsState = "故障";
+                                }
+                            }
+                            if (i == 6)
+                            {
+                                if (flag == "0")
+                                {
+                                    waterInsState = "正常";
+                                }
+                                else
+                                {
+                                    waterInsState = "故障";
+                                }
+                            }
+                            if (i == 7)
+                            {
+                                if (flag == "0")
+                                {
+                                    boxState = "正常";
+                                }
+                                else
+                                {
+                                    boxState = "关闭";
+                                }
+                            }
+                            if (i == 8)
+                            {
+                                if (flag == "0")
+                                {
+                                    memoryState = "正常";
+                                }
+                                else
+                                {
+                                    memoryState = "异常";
+                                }
+                            }
+                            if (i == 9)
+                            {
+                                if (flag == "0")
+                                {
+                                    ICState = "关闭";
+                                }
+                                else
+                                {
+                                    ICState = "IC卡有效";
+                                }
+                            }
+                            if (i == 10)
+                            {
+                                if (flag == "0")
+                                {
+                                    pumpState = "水泵工作";
+                                }
+                                else
+                                {
+                                    pumpState = "水泵停机";
+                                }
+                            }
+                            if (i == 11)
+                            {
+                                if (flag == "0")
+                                {
+                                    remianWaterState = "未超限";
+                                }
+                                else
+                                {
+                                    remianWaterState = "水量超限";
+                                }
+                            }
                         }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.WorkStatus.HasValue)
-                    {
                         try
                         {
+                            //string ACState = string.Empty;
+                            //string voltageState = string.Empty;
+                            //string waterState = string.Empty;
+                            //string flowState = string.Empty;
+                            //string qualityState = string.Empty;
+                            //string flowInsState = string.Empty;
+                            //string waterInsState = string.Empty;
+                            //string boxState = string.Empty;
+                            //string memoryState = string.Empty;
+                            //string ICState = string.Empty;
+                            //string pumpState = string.Empty;
+                            //string remianWaterState = string.Empty;
                             this.vWorkStatus.Invoke((Action)delegate
                             {
-                                this.vWorkStatus.Text = ProtocolMaps.WorkStatus4UI.FindValue(info.WorkStatus.Value);
-                                HighlightControl(this.vWorkStatus);
+                                this.ACState.Text = ACState;
+                                this.voltageState.Text = voltageState;
+                                this.waterState.Text = waterState;
+                                this.flowState.Text = flowState;
+                                this.qualityState.Text = qualityState;
+                                this.waterInsState.Text = waterInsState;
+                                this.waterInsState.Text = waterInsState;
+                                this.boxState.Text = boxState;
+                                this.memoryState.Text = memoryState;
+                                this.ICState.Text = ICState;
+                                this.pumpState.Text = pumpState;
+                                this.remianWaterState.Text = remianWaterState;
+
+                                HighlightControl(this.ACState);
+                                HighlightControl(this.voltageState);
+                                HighlightControl(this.waterState);
+                                HighlightControl(this.flowState);
+                                HighlightControl(this.qualityState);
+                                HighlightControl(this.waterInsState);
+                                HighlightControl(this.boxState);
+                                HighlightControl(this.memoryState);
+                                HighlightControl(this.ICState);
+                                HighlightControl(this.pumpState);
+                                HighlightControl(this.remianWaterState);
                             });
                         }
                         catch (Exception exp) { Debug.WriteLine(exp.Message); }
                     }
-                    if (!String.IsNullOrEmpty(info.VersionNum))
+                    if (!String.IsNullOrEmpty(info.Version))
                     {
                         try
                         {
                             this.vVersionNum.Invoke((Action)delegate
                             {
-                                this.vVersionNum.Text = info.VersionNum;
+                                this.vVersionNum.Text = info.Version;
                                 HighlightControl(this.vVersionNum);
                             });
                         }
                         catch (Exception exp) { Debug.WriteLine(exp.Message); }
                     }
-                    if (info.MainChannel.HasValue && info.ViceChannel.HasValue)
-                    {
-                        try
-                        {
-                            this.vMainChannel.Invoke((Action)delegate
-                            {
-                                this.vMainChannel.Text = ProtocolMaps.ChannelType4UIMap.FindValue(info.MainChannel.Value);
-                                HighlightControl(this.vMainChannel);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                        try
-                        {
-                            this.vViceChannel.Invoke((Action)delegate
-                            {
-                                this.vViceChannel.Text = ProtocolMaps.ChannelType4UIMap.FindValue(info.ViceChannel.Value);
-                                HighlightControl(this.vViceChannel);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.TeleNum))
-                    {
-                        try
-                        {
-                            this.vTeleNum.Invoke((Action)delegate
-                            {
-                                this.vTeleNum.Text = info.TeleNum;
-                                HighlightControl(this.vTeleNum);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.RingsNum.HasValue)
-                    {
-                        try
-                        {
-                            this.vRingsNum.Invoke((Action)delegate
-                            {
-                                this.vRingsNum.Value = info.RingsNum.Value;
-                                HighlightControl(this.vRingsNum);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.DestPhoneNum))
-                    {
-                        try
-                        {
-                            this.vDestPhoneNum.Invoke((Action)delegate
-                            {
-                                this.vDestPhoneNum.Text = info.DestPhoneNum;
-                                HighlightControl(this.vDestPhoneNum);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.TerminalNum))
-                    {
-                        try
-                        {
-                            this.vTerminalNum.Invoke((Action)delegate
-                            {
-                                this.vTerminalNum.Text = info.TerminalNum;
-                                HighlightControl(this.vTerminalNum);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.RespBeam))
-                    {
-                        try
-                        {
-                            this.vRespBeam.Invoke((Action)delegate
-                            {
-                                this.vRespBeam.Text = info.RespBeam;
-                                HighlightControl(this.vRespBeam);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.AvegTime.HasValue)
-                    {
-                        try
-                        {
-                            this.vAvegTime.Invoke((Action)delegate
-                            {
-                                this.vAvegTime.Text = info.AvegTime.Value.ToString();
-                                HighlightControl(this.vAvegTime);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.RainPlusReportedValue.HasValue)
-                    {
-                        try
-                        {
-                            this.vRainPlusReportedValue.Invoke((Action)delegate
-                            {
-                                if (m_CurrentStation == null)
-                                {
-                                    AddLog("未选择站点,或者该站点雨量精度不合法");
-                                }
-                                else
-                                {
-                                    decimal rainAccuracy = (decimal)m_CurrentStation.DRainAccuracy;
-                                    this.vRainPlusReportedValue.Value = info.RainPlusReportedValue.Value * rainAccuracy;
-                                    HighlightControl(this.vRainPlusReportedValue);
-                                }
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.KC))
-                    {
-                        if (info.KC.Length != 20)
-                        {
-                            MessageBox.Show("KC值为" + info.KC);
+                    //if (info.MainChannel.HasValue && info.ViceChannel.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vMainChannel.Invoke((Action)delegate
+                    //        {
+                    //            this.vMainChannel.Text = ProtocolMaps.ChannelType4UIMap.FindValue(info.MainChannel.Value);
+                    //            HighlightControl(this.vMainChannel);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //    try
+                    //    {
+                    //        this.vViceChannel.Invoke((Action)delegate
+                    //        {
+                    //            this.vViceChannel.Text = ProtocolMaps.ChannelType4UIMap.FindValue(info.ViceChannel.Value);
+                    //            HighlightControl(this.vViceChannel);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.TeleNum))
+                    //{
+                    //    try
+                    //    {
+                    //        this.vTeleNum.Invoke((Action)delegate
+                    //        {
+                    //            this.vTeleNum.Text = info.TeleNum;
+                    //            HighlightControl(this.vTeleNum);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.RingsNum.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vRingsNum.Invoke((Action)delegate
+                    //        {
+                    //            this.vRingsNum.Value = info.RingsNum.Value;
+                    //            HighlightControl(this.vRingsNum);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.DestPhoneNum))
+                    //{
+                    //    try
+                    //    {
+                    //        this.vDestPhoneNum.Invoke((Action)delegate
+                    //        {
+                    //            this.vDestPhoneNum.Text = info.DestPhoneNum;
+                    //            HighlightControl(this.vDestPhoneNum);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.TerminalNum))
+                    //{
+                    //    try
+                    //    {
+                    //        this.vTerminalNum.Invoke((Action)delegate
+                    //        {
+                    //            this.vTerminalNum.Text = info.TerminalNum;
+                    //            HighlightControl(this.vTerminalNum);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.RespBeam))
+                    //{
+                    //    try
+                    //    {
+                    //        this.ICset.Invoke((Action)delegate
+                    //        {
+                    //            this.ICset.Text = info.RespBeam;
+                    //            HighlightControl(this.ICset);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.AvegTime.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vAvegTime.Invoke((Action)delegate
+                    //        {
+                    //            this.vAvegTime.Text = info.AvegTime.Value.ToString();
+                    //            HighlightControl(this.vAvegTime);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.RainPlusReportedValue.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vRainPlusReportedValue.Invoke((Action)delegate
+                    //        {
+                    //            if (m_CurrentStation == null)
+                    //            {
+                    //                AddLog("未选择站点,或者该站点雨量精度不合法");
+                    //            }
+                    //            else
+                    //            {
+                    //                decimal rainAccuracy = (decimal)m_CurrentStation.DRainAccuracy;
+                    //                this.vRainPlusReportedValue.Value = info.RainPlusReportedValue.Value * rainAccuracy;
+                    //                HighlightControl(this.vRainPlusReportedValue);
+                    //            }
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.KC))
+                    //{
+                    //    if (info.KC.Length != 20)
+                    //    {
+                    //        MessageBox.Show("KC值为" + info.KC);
 
-                        }
-                        else
-                        {
-                            try
-                            {
-                                this.vK.Invoke((Action)delegate
-                                {
-                                    this.vK.Text = info.KC.Substring(0, 10);
-                                    HighlightControl(this.vK);
-                                });
-                            }
-                            catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                            try
-                            {
-                                this.vC.Invoke((Action)delegate
-                                {
-                                    this.vC.Text = info.KC.Substring(10, 10);
-                                    HighlightControl(this.vC);
-                                });
-                            }
-                            catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                        }
-                    }
-                    if (info.Rain.HasValue)
-                    {
-                        try
-                        {
-                            this.vRain.Invoke((Action)delegate
-                            {
-                                if (m_CurrentStation == null || m_CurrentStation.DRainAccuracy.ToString() == "无")
-                                {
-                                    AddLog("未选择站点,或者该站点雨量精度不合法");
-                                }
-                                else
-                                {
-                                    decimal rainAccuracy = (decimal)m_CurrentStation.DRainAccuracy;
-                                    this.vRain.Value = info.Rain.Value * rainAccuracy;
-                                    HighlightControl(this.vRain);
-                                }
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.Water.HasValue)
-                    {
-                        try
-                        {
-                            this.vWater.Invoke((Action)delegate
-                            {
-                                this.vWater.Value = info.Water.Value*(decimal)0.01;
-                                HighlightControl(this.vWater);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.WaterPlusReportedValue.HasValue)
-                    {
-                        try
-                        {
-                            this.vWaterPlusReportedValue.Invoke((Action)delegate
-                            {
-                                this.vWaterPlusReportedValue.Value = info.WaterPlusReportedValue.Value;
-                                HighlightControl(this.vWaterPlusReportedValue);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.SelectCollectionParagraphs.HasValue)
-                    {
-                        try
-                        {
-                            this.vSelectCollectionParagraphs.Invoke((Action)delegate
-                            {
-                                this.vSelectCollectionParagraphs.Text = ProtocolMaps.SelectCollectionParagraphs4UIMap.FindValue(info.SelectCollectionParagraphs.Value);
-                                HighlightControl(this.vSelectCollectionParagraphs);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (info.StationType.HasValue)
-                    {
-                        try
-                        {
-                            this.vStationType.Invoke((Action)delegate
-                            {
-                                this.vStationType.Text = ProtocolMaps.StationType4ChineseMap.FindValue(info.StationType.Value);
-                                HighlightControl(this.vStationType);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.UserName))
-                    {
-                        try
-                        {
-                            this.vUserName.Invoke((Action)delegate
-                            {
-                                this.vUserName.Text = info.UserName;
-                                HighlightControl(this.vUserName);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
-                    if (!String.IsNullOrEmpty(info.StationName))
-                    {
-                        try
-                        {
-                            this.vStationName.Invoke((Action)delegate
-                            {
-                                this.vStationName.Text = info.StationName;
-                                HighlightControl(this.vStationName);
-                            });
-                        }
-                        catch (Exception exp) { Debug.WriteLine(exp.Message); }
-                    }
+                    //    }
+                    //    else
+                    //    {
+                    //        try
+                    //        {
+                    //            this.vK.Invoke((Action)delegate
+                    //            {
+                    //                this.vK.Text = info.KC.Substring(0, 10);
+                    //                HighlightControl(this.vK);
+                    //            });
+                    //        }
+                    //        catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //        try
+                    //        {
+                    //            this.vC.Invoke((Action)delegate
+                    //            {
+                    //                this.vC.Text = info.KC.Substring(10, 10);
+                    //                HighlightControl(this.vC);
+                    //            });
+                    //        }
+                    //        catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //    }
+                    //}
+                    //if (info.Rain.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vRain.Invoke((Action)delegate
+                    //        {
+                    //            if (m_CurrentStation == null || m_CurrentStation.DRainAccuracy.ToString() == "无")
+                    //            {
+                    //                AddLog("未选择站点,或者该站点雨量精度不合法");
+                    //            }
+                    //            else
+                    //            {
+                    //                decimal rainAccuracy = (decimal)m_CurrentStation.DRainAccuracy;
+                    //                this.vRain.Value = info.Rain.Value * rainAccuracy;
+                    //                HighlightControl(this.vRain);
+                    //            }
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.Water.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vWater.Invoke((Action)delegate
+                    //        {
+                    //            this.vWater.Value = info.Water.Value*(decimal)0.01;
+                    //            HighlightControl(this.vWater);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.WaterPlusReportedValue.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vWaterPlusReportedValue.Invoke((Action)delegate
+                    //        {
+                    //            this.vWaterPlusReportedValue.Value = info.WaterPlusReportedValue.Value;
+                    //            HighlightControl(this.vWaterPlusReportedValue);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.SelectCollectionParagraphs.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vSelectCollectionParagraphs.Invoke((Action)delegate
+                    //        {
+                    //            this.vSelectCollectionParagraphs.Text = ProtocolMaps.SelectCollectionParagraphs4UIMap.FindValue(info.SelectCollectionParagraphs.Value);
+                    //            HighlightControl(this.vSelectCollectionParagraphs);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (info.StationType.HasValue)
+                    //{
+                    //    try
+                    //    {
+                    //        this.vStationType.Invoke((Action)delegate
+                    //        {
+                    //            this.vStationType.Text = ProtocolMaps.StationType4ChineseMap.FindValue(info.StationType.Value);
+                    //            HighlightControl(this.vStationType);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.UserName))
+                    //{
+                    //    try
+                    //    {
+                    //        this.OperatingParaModify.Invoke((Action)delegate
+                    //        {
+                    //            this.OperatingParaModify.Text = info.UserName;
+                    //            HighlightControl(this.OperatingParaModify);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
+                    //if (!String.IsNullOrEmpty(info.StationName))
+                    //{
+                    //    try
+                    //    {
+                    //        this.vStationName.Invoke((Action)delegate
+                    //        {
+                    //            this.vStationName.Text = info.StationName;
+                    //            HighlightControl(this.vStationName);
+                    //        });
+                    //    }
+                    //    catch (Exception exp) { Debug.WriteLine(exp.Message); }
+                    //}
                     #endregion
 
                     AddLog("接收数据：" + rawData);
@@ -644,104 +831,111 @@ namespace Hydrology.Forms
                 //  配置参数
                 #region 配置参数
                 var cmds = new List<EDownParamGY>();
-                //if (this.chkClock.Checked)
-                //{
-                //    cmds.Add(EDownParam.Clock);
-                //}
-                //if (this.chkVoltage.Checked)
-                //{
-                //    cmds.Add(EDownParam.Voltage);
-                //}
-                //if (this.chkStationCmdID.Checked)
-                //{
-                //    cmds.Add(EDownParam.StationCmdID);
-                //}
-                //if (this.chkNormalState.Checked)
-                //{
-                //    cmds.Add(EDownParam.NormalState);
-                //}
+                if (this.chkClock.Checked)
+                {
+                    cmds.Add(EDownParamGY.Rdata);
+                }
+                if (this.chkVoltage.Checked)
+                {
+                    cmds.Add(EDownParamGY.basicConfigRead);
+                }
+                if (this.chkStationCmdID.Checked)
+                {
+                    cmds.Add(EDownParamGY.timeFrom_To);
+                }
+                if (this.chkNormalState.Checked)
+                {
+                    cmds.Add(EDownParamGY.Selement);
+                }
                 if (this.chkVersionNum.Checked)
                 {
-                    cmds.Add(EDownParamGY.ontime);
+                    cmds.Add(EDownParamGY.version);
                 }
-                //if (this.chkWorkStatus.Checked)
-                //{
-                //    cmds.Add(EDownParam.WorkStatus);
-                //}
-                //if (this.chkTimePeriod.Checked)
-                //{
-                //    cmds.Add(EDownParam.TimePeriod);
-                //}
-                //if (this.chkTimeChoice.Checked)
-                //{
-                //    cmds.Add(EDownParam.TimeChoice);
-                //}
-
-                //if (this.chkMainChannel.Checked)
-                //{
-                //    cmds.Add(EDownParam.StandbyChannel);
-                //}
-                //if (this.chkDestPhoneNum.Checked)
-                //{
-                //    cmds.Add(EDownParam.DestPhoneNum);
-                //}
-                //if (this.chkTeleNum.Checked)
-                //{
-                //    cmds.Add(EDownParam.TeleNum);
-                //}
-                //if (this.chkTerminalNum.Checked)
-                //{
-                //    cmds.Add(EDownParam.TerminalNum);
-                //}
-                //if (this.chkRespBeam.Checked)
-                //{
-                //    cmds.Add(EDownParam.RespBeam);
-                //}
-                //if (this.chkRingsNum.Checked)
-                //{
-                //    cmds.Add(EDownParam.RingsNum);
-                //}
-
-                //if (this.chkAvegTime.Checked)
-                //{
-                //    cmds.Add(EDownParam.AvegTime);
-                //}
-                //if (this.chkStationType.Checked)
-                //{
-                //    cmds.Add(EDownParam.StationType);
-                //}
-                //if (this.chkWater.Checked)
-                //{
-                //    cmds.Add(EDownParam.Water);
-                //}
-                //if (this.chkWaterPlusReportedValue.Checked)
-                //{
-                //    cmds.Add(EDownParam.WaterPlusReportedValue);
-                //}
-                //if (this.chkRain.Checked)
-                //{
-                //    cmds.Add(EDownParam.Rain);
-                //}
-                //if (this.chkRainPlusReportedValue.Checked)
-                //{
-                //    cmds.Add(EDownParam.RainPlusReportedValue);
-                //}
-                //if (this.chkK.Checked)
-                //{
-                //    cmds.Add(EDownParam.KC);
-                //}
-                //if (this.chkSelectCollectionParagraphs.Checked)
-                //{
-                //    cmds.Add(EDownParam.SelectCollectionParagraphs);
-                //}
-                //if (this.chkUserName.Checked)
-                //{
-                //    cmds.Add(EDownParam.UserName);
-                //}
-                //if (this.chkStationName.Checked)
-                //{
-                //    cmds.Add(EDownParam.StationName);
-                //}
+                if (this.chkWorkStatus.Checked)
+                {
+                    cmds.Add(EDownParamGY.basicConfigModify);                                                                                                                                                                                                                                                                                                                                                                                          
+                }
+                if (this.chkTimePeriod.Checked)
+                {
+                    cmds.Add(EDownParamGY.operatingParaRead);
+                }
+                if (this.chkTimeChoice.Checked)
+                {
+                    cmds.Add(EDownParamGY.ArtifN);
+                }
+                if (this.chkMainChannel.Checked)
+                {
+                    cmds.Add(EDownParamGY.oldPwd);
+                    cmds.Add(EDownParamGY.newPwd);
+                }
+                if (this.chkDestPhoneNum.Checked)
+                {
+                    cmds.Add(EDownParamGY.alarm);
+                }
+                if (this.chkTeleNum.Checked)
+                {
+                    cmds.Add(EDownParamGY.history);
+                }
+                if (this.waterYield.Checked)
+                {
+                    cmds.Add(EDownParamGY.waterYield);
+                }
+                if (this.chkTerminalNum.Checked)
+                {
+                    cmds.Add(EDownParamGY.clocksearch);
+                }
+                if (this.chkRespBeam.Checked)
+                {
+                    cmds.Add(EDownParamGY.ICconfig);
+                }
+                if (this.chkRingsNum.Checked)
+                {
+                    cmds.Add(EDownParamGY.Reset);
+                }
+                if (this.memoryReset.Checked)
+                {
+                    cmds.Add(EDownParamGY.memoryReset);
+                }
+                if (this.chkAvegTime.Checked)
+                {
+                    cmds.Add(EDownParamGY.clockset);
+                }
+                if (this.chkStationType.Checked)
+                {
+                    cmds.Add(EDownParamGY.pumpCtrl);
+                }
+                if (this.chkWater.Checked)
+                {
+                    cmds.Add(EDownParamGY.valveCtrl);
+                }
+                    //if (this.chkWaterPlusReportedValue.Checked)
+                    //{
+                    //    cmds.Add(EDownParam.WaterPlusReportedValue);
+                    //}
+                if (this.chkRain.Checked)
+                {
+                    cmds.Add(EDownParamGY.gateCtrl);
+                }
+                    //if (this.chkRainPlusReportedValue.Checked)
+                    //{
+                    //    cmds.Add(EDownParam.RainPlusReportedValue);
+                    //}
+                    //if (this.chkK.Checked)
+                    //{
+                    //    cmds.Add(EDownParam.KC);
+                    //}
+                    //if (this.chkSelectCollectionParagraphs.Checked)
+                    //{
+                    //    cmds.Add(EDownParam.SelectCollectionParagraphs);
+                    //}
+                    if (this.chkUserName.Checked)
+                {
+                    cmds.Add(EDownParamGY.operatingParaModify);
+                }
+                if (this.chkStationName.Checked)
+                {
+                    cmds.Add(EDownParamGY.pumpRead);
+                }
                 if (cmds.Count == 0)
                 {
                     MessageBox.Show("请选择参数!");
@@ -779,8 +973,7 @@ namespace Hydrology.Forms
                 Debug.WriteLine("参数设置模块:读取数据失败！" + exp.Message);
             }
         }
-
-        private void btn_Set_Click(object sender, EventArgs e)
+        /*private void btn_Set_Click(object sender, EventArgs e)
         {
             try
             {
@@ -796,6 +989,7 @@ namespace Hydrology.Forms
                 string sid = station.StationID;
 
                 var cmds = new List<EDownParam>();
+
                 CDownConf down = new CDownConf();
                 //  配置参数
                 #region 配置参数
@@ -968,6 +1162,7 @@ namespace Hydrology.Forms
                 {
                     // MessageBox.Show("测站类型不允许设置");
                     cmds.Add(EDownParam.StationType);
+                    down.PumpCtrl = this.pumpCtrl.Text;
                     if (this.vStationType.Text == "雨量站")
                         down.StationType = EStationType.ERainFall;
                     if (this.vStationType.Text == "水位站")
@@ -982,6 +1177,7 @@ namespace Hydrology.Forms
                 {
                     cmds.Add(EDownParam.Water);
                     down.Water = this.vWater.Value * (decimal)100;
+                    down.ValveCtrl = this.valveCtrl.Text;
                 }
                 if (this.chkWaterPlusReportedValue.Checked)
                 {
@@ -998,6 +1194,7 @@ namespace Hydrology.Forms
                         return;
                     }
                     down.Rain = this.vRain.Value / rainAcc;
+                    down.GateCtrl = this.gateCtrl.Text;
                 }
                 if (this.chkRainPlusReportedValue.Checked)
                 {
@@ -1098,7 +1295,375 @@ namespace Hydrology.Forms
             {
                 Debug.WriteLine("参数设置模块:设置参数失败！" + exp.Message);
             }
+        }*/
+
+
+
+
+
+        private void btn_Set_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ResetAllControlsBackColor();
+                //  站点id
+                var station = (this.cmbStation as CStationComboBox).GetStation();
+                m_CurrentStation = station;
+                if (station == null)
+                {
+                    MessageBox.Show("请选择站点！");
+                    return;
+                }
+                string sid = station.StationID;
+
+                var cmds = new List<EDownParam>();
+                var cmdsGY = new List<EDownParamGY>();
+
+                CDownConf down = new CDownConf();
+                CDownConfGY downGY = new CDownConfGY();
+
+                //  配置参数
+                #region 配置参数
+                if (this.chkClock.Checked)
+                {
+                    cmds.Add(EDownParam.Clock);
+                    down.Clock = this.chkLocalTime.Checked ? DateTime.Now : this.vClock.Value;
+                }
+                if (this.chkVoltage.Checked)
+                {
+                    MessageBox.Show("电压不允许设置");
+                    this.chkVoltage.Checked = false;
+                    return;
+                }
+                if (this.chkStationCmdID.Checked)
+                {
+                    MessageBox.Show("站号不允许设置");
+                    this.chkStationCmdID.Checked = false;
+                    return;
+                }
+                if (this.chkNormalState.Checked)
+                {
+                    cmds.Add(EDownParam.NormalState);
+                    var normalState = this.vNormalState.Text.Trim();
+                    if (this.m_vNormalStateLists.Contains(normalState))
+                    {
+                        down.NormalState = ProtocolMaps.NormalState4UI.FindKey(normalState);
+                    }
+                    else
+                    {
+                        MessageBox.Show("常规状态 参数不是合法的!");
+                        return;
+                    }
+                }
+                if (this.chkVersionNum.Checked)
+                {
+                    MessageBox.Show("版本号不允许设置");
+                    this.chkVersionNum.Checked = false;
+                    return;
+                }
+                //增加定值水量控制
+                if (this.waterYield.Checked)
+                {
+                    cmdsGY.Add(EDownParamGY.waterYield);
+                    downGY.WaterYield = this.vVersionNum.Text;
+                }
+                if (this.chkWorkStatus.Checked)
+                {
+                    cmds.Add(EDownParam.WorkStatus);
+                    string workStatus = this.vWorkStatus.Text.Trim();
+                    if (this.m_vWorkStatusLists.Contains(workStatus))
+                    {
+                        down.WorkStatus = ProtocolMaps.WorkStatus4UI.FindKey(workStatus);
+                    }
+                    else
+                    {
+                        MessageBox.Show("工作状态 参数不是合法的!");
+                        return;
+                    }
+
+                    cmdsGY.Add(EDownParamGY.basicConfigModify);
+                    downGY.BasicConfigModify = this.basicconfig.Text;
+
+                }
+                if (this.chkTimePeriod.Checked)
+                {
+                    cmds.Add(EDownParam.TimePeriod);
+                    string temp = String.Format("{0:D2}", Int16.Parse(this.vTimePeriod.Text));
+                    if (this.m_vTimePeriodLists.Contains(Int16.Parse(this.vTimePeriod.Text.Trim())))
+                    {
+                        down.TimePeriod = ProtocolMaps.TimePeriodMap.FindKey(temp);
+                    }
+                    else
+                    {
+                        MessageBox.Show("定时段次 参数不是合法的!");
+                        return;
+                    }
+                }
+                if (this.chkTimeChoice.Checked)
+                {
+                    cmds.Add(EDownParam.TimeChoice);
+                    string temp = this.vTimeChoice.Text.Trim();
+                    if (this.m_vTimeChoiceLists.Contains(temp))
+                    {
+                        down.TimeChoice = ProtocolMaps.TimeChoice4UI.FindKey(temp);
+                    }
+                    else
+                    {
+                        MessageBox.Show("对时选择 参数不是合法的!");
+                        return;
+                    }
+                }
+
+                if (this.chkMainChannel.Checked)
+                {
+                    cmds.Add(EDownParam.StandbyChannel);
+
+                    string mainChannel = this.vMainChannel.Text.Trim();
+                    string viceChannel = this.vViceChannel.Text.Trim();
+                    if (!this.m_vMainChannelLists.Contains(mainChannel))
+                    {
+                        MessageBox.Show("主用信道 参数不是合法的!");
+                        return;
+                    }
+                    if (!this.m_vViceChannelLists.Contains(viceChannel))
+                    {
+                        MessageBox.Show("备用信道 参数不是合法的!");
+                        return;
+                    }
+                    if (mainChannel == viceChannel)
+                    {
+                        MessageBox.Show("主用信道和备用信道不能同时设为" + vMainChannel.Text);
+                        return;
+                    }
+                    down.MainChannel = ProtocolMaps.ChannelType4UIMap.FindKey(mainChannel);
+                    down.ViceChannel = ProtocolMaps.ChannelType4UIMap.FindKey(viceChannel);
+
+                    cmdsGY.Add(EDownParamGY.oldPwd);
+                    downGY.OldPwd = this.oldPwd.Text;
+                    cmdsGY.Add(EDownParamGY.newPwd);
+                    downGY.NewPwd = this.newPwd.Text;
+                }
+                if (this.chkDestPhoneNum.Checked)
+                {
+                    cmds.Add(EDownParam.DestPhoneNum);
+                    string temp = this.vDestPhoneNum.Text.Trim();
+                    if (!CStringUtil.IsDigitStrWithSpecifyLength(temp, 11))
+                    {
+                        MessageBox.Show("目的地手机号码 长度必须为11位，而且是数字!");
+                        return;
+                    }
+                    down.DestPhoneNum = temp;
+                }
+                if (this.chkTeleNum.Checked)
+                {
+                    cmds.Add(EDownParam.TeleNum);
+                    string temp = this.vTeleNum.Text.Trim();
+                    if (!CStringUtil.IsDigit(temp))
+                    {
+                        MessageBox.Show("SIM卡号 所有位必须全部为数字!");
+                        return;
+                    }
+                    down.TeleNum = temp;
+                }
+                if (this.chkTerminalNum.Checked)
+                {
+                    cmds.Add(EDownParam.TerminalNum);
+                    string temp = this.vTerminalNum.Text.Trim();
+                    if (!CStringUtil.IsDigit(temp))
+                    {
+                        MessageBox.Show("终端机号 所有位必须全部为数字!");
+                        return;
+                    }
+                    down.TerminalNum = temp;
+                }
+                if (this.chkRespBeam.Checked)
+                {
+                    cmds.Add(EDownParam.RespBeam);
+                    string temp = this.ICset.Text.Trim();
+                    if (!CStringUtil.IsDigit(temp))
+                    {
+                        MessageBox.Show("响应波束 所有位必须全部为数字!");
+                        return;
+                    }
+                    down.RespBeam = temp;
+
+                    cmdsGY.Add(EDownParamGY.ICconfig);
+                    downGY.ICconfig = this.ICset.Text;
+                }
+                if (this.chkRingsNum.Checked)
+                {
+                    cmds.Add(EDownParam.RingsNum);
+                    decimal temp = this.vRingsNum.Value;
+                    if (temp <= 0)
+                    {
+                        MessageBox.Show("振铃次数 必须大于0!");
+                        return;
+                    }
+                    down.RingsNum = temp;
+                }
+
+                if (this.chkAvegTime.Checked)
+                {
+                    cmds.Add(EDownParam.AvegTime);
+                    //down.AvegTime = Decimal.Parse(this.vAvegTime.Text);
+                    cmdsGY.Add(EDownParamGY.clockset);
+                }
+                if (this.chkStationType.Checked)
+                {
+                    // MessageBox.Show("测站类型不允许设置");
+                    cmds.Add(EDownParam.StationType);
+
+                    cmdsGY.Add(EDownParamGY.pumpCtrl);
+                    downGY.PumpCtrl = this.pumpCtrl.Text;
+
+                    //if (this.vStationType.Text == "雨量站")
+                    //    down.StationType = EStationType.ERainFall;
+                    //if (this.vStationType.Text == "水位站")
+                    //    down.StationType = EStationType.ERiverWater;
+                    //if (this.vStationType.Text == "水文站")
+                    //    down.StationType = EStationType.EHydrology;
+                    //this.chkStationType.Checked = false;
+                    //return;
+
+                }
+                if (this.chkWater.Checked)
+                {
+                    //cmds.Add(EDownParam.Water);
+                    //down.Water = this.vWater.Value * (decimal)100;
+
+                    cmdsGY.Add(EDownParamGY.valveCtrl);
+                    downGY.ValveCtrl = this.valveCtrl.Text;
+                }
+                if (this.chkWaterPlusReportedValue.Checked)
+                {
+                    cmds.Add(EDownParam.WaterPlusReportedValue);
+                    down.WaterPlusReportedValue = Decimal.Parse(this.vWaterPlusReportedValue.Text);
+                }
+                if (this.chkRain.Checked)
+                {
+                    cmds.Add(EDownParam.Rain);
+                    decimal rainAcc = (decimal)m_CurrentStation.DRainAccuracy;
+                    if (rainAcc == 0)
+                    {
+                        MessageBox.Show("站点的雨量精度不能为0!");
+                        return;
+                    }
+                    //down.Rain = this.vRain.Value / rainAcc;
+
+
+                    cmdsGY.Add(EDownParamGY.gateCtrl);
+                    downGY.GateCtrl = this.gateCtrl.Text;
+                }
+                if (this.chkRainPlusReportedValue.Checked)
+                {
+                    cmds.Add(EDownParam.RainPlusReportedValue);
+                    decimal rainAcc = (decimal)m_CurrentStation.DRainAccuracy;
+                    if (rainAcc == 0)
+                    {
+                        MessageBox.Show("站点的雨量精度不能为0!");
+                        return;
+                    }
+                    down.RainPlusReportedValue = this.vRainPlusReportedValue.Value / rainAcc;
+                }
+                if (this.chkK.Checked)
+                {
+                    string k = this.vK.Text.Trim();
+                    string c = this.vC.Text.Trim();
+                    if (!CStringUtil.IsDigitStrWithSpecifyLength(k, 10))
+                    {
+                        MessageBox.Show("K值长度必须为10位数字!");
+                        return;
+                    }
+                    if (!CStringUtil.IsDigitStrWithSpecifyLength(c, 10))
+                    {
+                        MessageBox.Show("C值长度必须为10位数字!");
+                        return;
+                    }
+                    cmds.Add(EDownParam.KC);
+                    down.KC = this.vK.Text + this.vC.Text;
+                }
+                if (this.chkSelectCollectionParagraphs.Checked)
+                {
+                    string temp = this.vSelectCollectionParagraphs.Text;
+                    if (!this.m_vSelectCollectionParagraphsLists.Contains(temp))
+                    {
+                        MessageBox.Show("采集段次 参数不是合法的!");
+                        return;
+                    }
+                    cmds.Add(EDownParam.SelectCollectionParagraphs);
+                    down.SelectCollectionParagraphs = ProtocolMaps.SelectCollectionParagraphs4UIMap.FindKey(temp);
+                }
+                if (this.chkUserName.Checked)
+                {
+                    string temp = this.OperatingParaModify.Text;
+                    if (!CStringUtil.IsDigitOrAlpha(temp))
+                    {
+                        MessageBox.Show("用户名只能为字母或者数字！");
+                        return;
+                    }
+                    cmds.Add(EDownParam.UserName);
+                    down.UserName = temp;
+
+                    cmdsGY.Add(EDownParamGY.operatingParaModify);
+                    downGY.OperatingParaModify = this.OperatingParaModify.Text;
+
+                }
+                if (this.chkStationName.Checked)
+                {
+                    string temp = this.vStationName.Text;
+                    if (!CStringUtil.IsDigitOrAlpha(temp))
+                    {
+                        MessageBox.Show("测站名只能为字母或者数字！");
+                        return;
+                    }
+                    cmds.Add(EDownParam.StationName);
+                    down.StationName = temp;
+                }
+                //if (cmds.Count == 0)
+                //{
+                //    MessageBox.Show("请选择参数!");
+                //    return;
+                //}
+                #endregion
+                //string gprsNum = this.txtGprs.Text;
+                /*if (String.IsNullOrEmpty(gprsNum))
+                {
+                    MessageBox.Show(this.cmbMsgType.Text + "号码不能为空!");
+                    return;
+                }*/
+                if (this.m_channelType == EChannelType.GPRS)
+                {
+                    if (!HasUserOnLine())
+                    {
+                        return;
+                    }
+                }
+
+                string query = CPortDataMgr.Instance.SendSetMsgGY("", sid, cmdsGY, downGY, this.m_channelType);
+
+                m_RSStatus = EReadOrSetStatus.Set;
+                m_CmdStr = "设置";
+                m_StatusIDStr = sid;
+                SetWarningInfo(string.Format("{0}{1}命令发出", m_CmdStr, m_StatusIDStr), Color.Blue);
+                // 写入系统日志
+                string logMsg = String.Format("--------设置参数    目标站点（{0:D4}）--------- ", int.Parse(sid));
+                CSystemInfoMgr.Instance.AddInfo(logMsg);
+                this.listView1.Items.Add(logMsg);
+                AddLog(String.Format("[{0}] Send: {1,-10}  {2}", m_channelType, "", query));
+                m_RSStatus = EReadOrSetStatus.Set;
+
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine("参数设置模块:设置参数失败！" + exp.Message);
+            }
         }
+
+
+
+
+
+
 
         private void btn_Exit_Click(object sender, EventArgs e)
         {
@@ -1164,14 +1729,14 @@ namespace Hydrology.Forms
                 return;
 
             string txt = this.cmbMsgType.Text;
-            if (txt == EChannelType.GPRS.ToString())
-                this.txtGprs.Text = station.GPRS;
-            else if (txt == EChannelType.GSM.ToString())
-                this.txtGprs.Text = station.GSM;
-            else if (txt == EChannelType.BeiDou.ToString())
-                this.txtGprs.Text = station.BDSatellite;
-            else if (txt == EChannelType.PSTN.ToString())
-                ;
+            //if (txt == EChannelType.GPRS.ToString())
+            //    this.txtGprs.Text = station.GPRS;
+            //else if (txt == EChannelType.GSM.ToString())
+            //    this.txtGprs.Text = station.GSM;
+            //else if (txt == EChannelType.BeiDou.ToString())
+            //    this.txtGprs.Text = station.BDSatellite;
+            //else if (txt == EChannelType.PSTN.ToString())
+            //    ;
             //      this.txtGprs.Text = station.PSTV;
         }
         private void cmbMsgType_SelectedIndexChanged(object sender, EventArgs e)
@@ -1186,17 +1751,17 @@ namespace Hydrology.Forms
             {
                 this.lblGprs.Text = "GPRS号码:";
                 m_channelType = EChannelType.GPRS;
-                this.txtGprs.Text = station.GPRS;
+                //this.txtGprs.Text = station.GPRS;
             }
             else if (txt == EChannelType.GSM.ToString())
             {
                 this.lblGprs.Text = "GSM号码:";
                 m_channelType = EChannelType.GSM;
-                this.txtGprs.Text = station.GSM;
+                //this.txtGprs.Text = station.GSM;
             }
             else if (txt == EChannelType.TCP.ToString())
             {
-                this.lblGprs.Text = "GSM号码:";
+                this.lblGprs.Text = "TCP:";
                 m_channelType = EChannelType.TCP;
                 //this.txtGprs.Text = station;
             }
@@ -1204,7 +1769,7 @@ namespace Hydrology.Forms
             {
                 this.lblGprs.Text = "北斗卫星号码:";
                 m_channelType = EChannelType.BeiDou;
-                this.txtGprs.Text = station.BDSatellite;
+                //this.txtGprs.Text = station.BDSatellite;
             }
             else if (txt == EChannelType.PSTN.ToString())
             {
@@ -1311,8 +1876,8 @@ namespace Hydrology.Forms
                 this.vStationCmdID.Enabled = true;
             if (Object.ReferenceEquals(control, this.vVersionNum))
                 this.vVersionNum.Enabled = true;
-            if (Object.ReferenceEquals(control, this.vStationType))
-                this.vStationType.Enabled = true;
+            //if (Object.ReferenceEquals(control, this.vStationType))
+            //    this.vStationType.Enabled = true;
         }
 
         private void ComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -1337,12 +1902,12 @@ namespace Hydrology.Forms
                 return;
             }
             cmd += "\r\n";
-            string gprsNum = this.txtGprs.Text;
-            if (String.IsNullOrEmpty(gprsNum))
-            {
-                MessageBox.Show(this.lblGprs.Text.Replace(":", "") + "号码不能为空!");
-                return;
-            }
+            //string gprsNum = this.txtGprs.Text;
+            //if (String.IsNullOrEmpty(gprsNum))
+            //{
+            //    MessageBox.Show(this.lblGprs.Text.Replace(":", "") + "号码不能为空!");
+            //    return;
+            //}
 
             var station = (this.cmbStation as CStationComboBox).GetStation();
             m_CurrentStation = station;
@@ -1358,7 +1923,50 @@ namespace Hydrology.Forms
             CSystemInfoMgr.Instance.AddInfo(logMsg);
             AddLog(logMsg);
 
-            CPortDataMgr.Instance.SendMsg(gprsNum, sid, cmd, this.m_channelType);
+            CPortDataMgr.Instance.SendMsg("", sid, cmd, this.m_channelType);
+        }
+
+        private string HexString2BinString(string hexString)
+        {
+            string result = string.Empty;
+            foreach (char c in hexString)
+            {
+                int v = Convert.ToInt32(c.ToString(), 16);
+                int v2 = int.Parse(Convert.ToString(v, 2));
+                // 去掉格式串中的空格，即可去掉每个4位二进制数之间的空格，
+                result += string.Format("{0:d4} ", v2);
+            }
+            return result;
+        }
+
+        private void chkTimePeriod_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chkStationCmdID_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chkDestPhoneNum_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chkTerminalNum_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pumpCtrl_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

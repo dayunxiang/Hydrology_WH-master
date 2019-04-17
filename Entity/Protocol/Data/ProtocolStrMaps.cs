@@ -23,7 +23,7 @@ namespace Hydrology.Entity
             { ENormalState.GPRS,   "01" },
             { ENormalState.GSM,    "02" }
         };
-        public static CDictionary<ENormalState, string> NormalState4UI = new CDictionary<ENormalState, string>() 
+        public static CDictionary<ENormalState, string> NormalState4UI = new CDictionary<ENormalState, string>()
         {
             { ENormalState.GPRS,   "GPRS" },
             { ENormalState.GSM,    "GSM" }
@@ -86,34 +86,37 @@ namespace Hydrology.Entity
             { EDownParam.UserName , "54" },
             { EDownParam.StationName , "55" }
         };
+
         public static CDictionary<EDownParamGY, String> DownParamMapGY = new CDictionary<EDownParamGY, String>()
         {
-            { EDownParamGY.ontime ,        "03" },
-            { EDownParamGY.DRZ ,  "04" },
-            { EDownParamGY.testtime ,      "05"},
-            { EDownParamGY.oldPwd , "08" },
-            { EDownParamGY.newPwd ,   "14" },
-            { EDownParamGY.memoryReset ,   "24" },
-            { EDownParamGY.timeFrom ,   "20" },
-            { EDownParamGY.timeTo ,   "19" },
-            { EDownParamGY.timeFrom_To,"27" },
-            { EDownParamGY.DRP ,      "28" },
-            { EDownParamGY.Step ,     "37" },
-            { EDownParamGY.basicConfig , "49" },
-            { EDownParamGY.operatingPara ,  "15" },
-            { EDownParamGY.Reset ,     "09" },
-            { EDownParamGY.ICconfig ,     "16" },
-            { EDownParamGY.pumpCtrl , "10" },
-            { EDownParamGY.valveCtrl ,       "62" },
-            { EDownParamGY.gateCtrl ,     "02" },
-            { EDownParamGY.waterYield ,    "12" },
-            { EDownParamGY.WaterPlusReportedValue ,     "06" },
-            { EDownParamGY.SelectCollectionParagraphs , "11" },
-            { EDownParamGY.StationType , "07" },
-            { EDownParamGY.UserName , "54" },
-            { EDownParamGY.StationName , "55" },
-            { EDownParamGY.Version,"88"}
+            { EDownParamGY.Rdata ,        "03" },
+            { EDownParamGY.ArtifN ,  "04" },
+            { EDownParamGY.Selement ,      "05"},
+            { EDownParamGY.pumpRead , "08" },
+            { EDownParamGY.version ,   "14" },
+            { EDownParamGY.alarm ,   "24" },
+            { EDownParamGY.clockset ,   "20" },
+            { EDownParamGY.history ,   "19" },
+            { EDownParamGY.clocksearch,"27" },
+            { EDownParamGY.oldPwd ,      "28" },
+            { EDownParamGY.newPwd ,     "37" },
+            { EDownParamGY.memoryReset , "49" },
+            { EDownParamGY.timeFrom_To ,  "15" },
+            { EDownParamGY.DRZ ,     "09" },
+            { EDownParamGY.DRP ,     "16" },
+            { EDownParamGY.Step , "10" },
+            { EDownParamGY.basicConfigRead ,       "62" },
+            { EDownParamGY.basicConfigModify ,     "02" },
+            { EDownParamGY.operatingParaRead ,    "12" },
+            { EDownParamGY.operatingParaModify ,     "06" },
+            { EDownParamGY.Reset , "11" },
+            { EDownParamGY.ICconfig , "07" },
+            { EDownParamGY.pumpCtrl , "54" },
+            { EDownParamGY.valveCtrl , "55" },
+            { EDownParamGY.gateCtrl,"56"},
+            { EDownParamGY.waterYield,"57"}
         };
+
         /// <summary>
         /// -1 表示长度未定
         /// 正数表示相应字段对应字符串解析中的长度
@@ -148,30 +151,32 @@ namespace Hydrology.Entity
 
         public static CDictionary<EDownParamGY, String> DownParamLengthMapGY = new CDictionary<EDownParamGY, String>()
         {
-            { EDownParamGY.ontime,                    "12"},
-            { EDownParamGY.DRZ,                       "3" },
-            { EDownParamGY.testtime,                  "10"},
-            { EDownParamGY.oldPwd,                    "4" },
-            { EDownParamGY.newPwd,                    "4" },
-            { EDownParamGY.memoryReset,               "2" },
-            { EDownParamGY.timeFrom,                  "8" },
-            { EDownParamGY.timeTo,                    "8" },
-            { EDownParamGY.timeFrom_To,               "3" },
-            { EDownParamGY.DRP,                       "3" },
-            { EDownParamGY.Step,                      "5" },
-            { EDownParamGY.basicConfig,               "-1"},
-            { EDownParamGY.operatingPara,             "-1"},
-            { EDownParamGY.Reset,                     "2" },
-            { EDownParamGY.ICconfig,                  "10"},
-            { EDownParamGY.pumpCtrl,                  "-1"},
-            { EDownParamGY.valveCtrl,                 "-1"},
-            { EDownParamGY.gateCtrl,                  "-1"},
-            { EDownParamGY.waterYield,                "2" },
-            { EDownParamGY.WaterPlusReportedValue,    "2" },
-            { EDownParamGY.SelectCollectionParagraphs,"2" },
-            { EDownParamGY.StationType,               "2" },
-            { EDownParamGY.UserName,                  "-1"},
-            {EDownParamGY.StationName,                "-1"}
+            { EDownParamGY.Rdata,                      "2" },
+            { EDownParamGY.ArtifN,                     "2" },
+            { EDownParamGY.Selement,                   "2"},
+            { EDownParamGY.pumpRead,                   "2" },
+            { EDownParamGY.version,                    "2" },
+            { EDownParamGY.alarm,                      "2" },
+            { EDownParamGY.clockset,                   "2" },
+            { EDownParamGY.history,                    "2" },
+            { EDownParamGY.clocksearch,                "2" },
+            { EDownParamGY.oldPwd,                     "4" },
+            { EDownParamGY.newPwd,                     "4" },
+            { EDownParamGY.memoryReset,                "2" },
+            { EDownParamGY.timeFrom_To,                "-1"},
+            { EDownParamGY.DRZ,                        "3" },
+            { EDownParamGY.DRP,                        "3" },
+            { EDownParamGY.Step,                       "-1"},
+            { EDownParamGY.basicConfigRead,            "-1"},
+            { EDownParamGY.basicConfigModify,          "-1"},
+            { EDownParamGY.operatingParaRead,          "2" },
+            { EDownParamGY.operatingParaModify,        "2" },
+            { EDownParamGY.Reset,                      "2" },
+            { EDownParamGY.ICconfig,                   "6" },
+            { EDownParamGY.pumpCtrl,                   "-1"},
+            { EDownParamGY.valveCtrl,                  "-1"},
+            { EDownParamGY.gateCtrl,                   "-1"},
+            { EDownParamGY.waterYield,                 "-1"}
         };
 
         public static CDictionary<EDownParam, String> DownParam4ChineseMap = new CDictionary<EDownParam, string>()
@@ -199,7 +204,7 @@ namespace Hydrology.Entity
             { EDownParam.SelectCollectionParagraphs,"采集段次选择"},
             { EDownParam.StationType,               "测站类型" } ,
             { EDownParam.UserName,                  "用户名" } ,
-            { EDownParam.StationName,               "测站名" } 
+            { EDownParam.StationName,               "测站名" }
         };
 
         public static CDictionary<EChannelType, String> ChannelType4ProtoMap = new CDictionary<EChannelType, String>()
@@ -230,7 +235,7 @@ namespace Hydrology.Entity
         {
             { EChannelType.BeiDou,  "NOT_CLEAR" },
             { EChannelType.GPRS,     "$" },
-            { EChannelType.GSM,     String.Empty },
+            { EChannelType.GSM,    String.Empty },
             { EChannelType.None,    "NOT_CLEAR" },
             { EChannelType.PSTN,    "NOT_CLEAR" }
         };
@@ -270,7 +275,7 @@ namespace Hydrology.Entity
             { ESelectCollectionParagraphs.FiveOrSix,    "01" },
             { ESelectCollectionParagraphs.TenOrTwelve,  "02" }
         };
-        public static CDictionary<ESelectCollectionParagraphs, String> SelectCollectionParagraphs4UIMap = new CDictionary<ESelectCollectionParagraphs, string>() 
+        public static CDictionary<ESelectCollectionParagraphs, String> SelectCollectionParagraphs4UIMap = new CDictionary<ESelectCollectionParagraphs, string>()
         {
             { ESelectCollectionParagraphs.FiveOrSix,   "5/6" },
             { ESelectCollectionParagraphs.TenOrTwelve, "10/12"}
@@ -341,7 +346,7 @@ namespace Hydrology.Entity
                 case EStationTypeProto.EParallelRiverWater:
                 case EStationTypeProto.ESerialRiverWater:
                     //type = "01"; break;
-                   type = "02"; break;
+                    type = "02"; break;
                 case EStationTypeProto.ERainFall:
                     //type = "02"; break;
                     type = "01"; break;
